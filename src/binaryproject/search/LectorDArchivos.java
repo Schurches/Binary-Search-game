@@ -30,7 +30,7 @@ public class LectorDArchivos {
     
     public String[] leerLinea() throws IOException{
         lineaActual = lector.readLine();
-        if(lineaActual != null){
+         if(lineaActual != null){
             return lineaActual.split(",");
         }
         return null;

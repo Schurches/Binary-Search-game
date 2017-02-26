@@ -31,6 +31,9 @@ public class Imagenes {
     public ImageIcon obtenerImagen(int index){
         return this.imagenes.get(index);
     }
+    public ArrayList<ImageIcon> obtenerLista(){
+        return this.imagenes;
+    }
     
     
 }

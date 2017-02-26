@@ -19,15 +19,17 @@ import javax.swing.ImageIcon;
  */
 public class BinaryProject {
 
-    private ArrayList<ImageIcon> recurGraf;
+    private ArrayList<ArrayList<ImageIcon>> recurGraf;
     private ArrayList<ImageIcon> recurMusic;
     private ArrayList<String> jugadores;
     private ArrayList<Object> preguntas;
+    private ArrayList<String[]> listaPreg;
     String jugadoresRuta;
     public BinaryProject(){
-        recurGraf = new ArrayList<ImageIcon>();
+        recurGraf = new ArrayList<ArrayList<ImageIcon>>();
         recurMusic = new ArrayList<ImageIcon>();
         jugadores = new ArrayList<String>();
+        listaPreg = new ArrayList<String[]>();
     }
     /**
      * @param args the command line arguments
@@ -36,7 +38,8 @@ public class BinaryProject {
         BinaryProject BP = new BinaryProject();
         BP.cargarImagenes();
         BP.cargarJugadores();
-        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta);
+        BP.cargarBancoDePreguntas();
+        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta, BP.listaPreg);
         V.setVisible(true);
         V.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         V.getRefresh().start();
@@ -45,8 +48,12 @@ public class BinaryProject {
     
     public void cargarBancoDePreguntas() throws FileNotFoundException, IOException{
         LectorDArchivos reader = new LectorDArchivos(getClass().getResource("niveles/bancoP.txt").getFile());
+        String[] preguntas = reader.leerLinea();
+        while(preguntas != null){
+            listaPreg.add(preguntas);
+            preguntas = reader.leerLinea();
+        }
         reader.cerrarArchivo();
-        System.out.println("I found it!");
     }
     
     public void cargarJugadores() throws FileNotFoundException, IOException{
@@ -61,11 +68,31 @@ public class BinaryProject {
     }
  
     public void cargarImagenes(){
-        ImageIcon asd = new ImageIcon(getClass().getResource("imagenes/Pergamino.jpg"));
-        recurGraf.add(asd);
+        ArrayList<ImageIcon> imagenes = new ArrayList<ImageIcon>();
+        ImageIcon imagen;
+        //Botones -- ID = 0
+        for (int i = 0; i <= 8; i++) {
+            imagen = new ImageIcon(getClass().getResource("imagenes/binarySearch10"+i+".png"));
+            imagenes.add(imagen);
+        }
+        recurGraf.add(imagenes);
+        //Explicaciones --
+        imagenes = new ArrayList<ImageIcon>();
+        //Nivel1 -- ID = 1
+        for (int i = 1; i <= 35; i++) {
+            imagen = new ImageIcon(getClass().getResource("imagenes/binarySearch"+i+".jpg"));
+            imagenes.add(imagen);
+        }
+        recurGraf.add(imagenes);
+        imagenes = new ArrayList<ImageIcon>();
+        //Nivel2 -- ID = 2
+        imagenes = new ArrayList<ImageIcon>();
+        //Nivel3 -- ID = 3
+        
+        recurGraf.add(imagenes);
     }
 
-    public ArrayList<ImageIcon> getRecurGraf() {
+    public ArrayList<ArrayList<ImageIcon>> getRecurGraf() {
         return recurGraf;
     }
     
