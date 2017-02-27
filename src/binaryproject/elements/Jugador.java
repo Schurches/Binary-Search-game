@@ -13,6 +13,7 @@ import java.util.ArrayList;
  */
 public class Jugador {
     
+    private final int ID;
     private String nombre;
     private final String contraseña;
     private ArrayList<Long> tiempos;
@@ -25,7 +26,8 @@ public class Jugador {
      * @param nombre Player Name
      * @param contraseña Password
      */
-    public Jugador(String nombre, String contraseña) {
+    public Jugador(String nombre, String contraseña, int ID) {
+        this.ID = ID;
         this.nombre = nombre;
         this.contraseña = contraseña;
         this.tiempos = new ArrayList<Long>();
@@ -43,13 +45,14 @@ public class Jugador {
      * @param intentos Intentos de cada nivel
      * @param score puntaje total
      */
-    public Jugador(String nombre, String contraseña, ArrayList<Long> tiempos, ArrayList<Float> puntajes, ArrayList<Integer> intentos, float score) {
+    public Jugador(int ID, String nombre, String contraseña, ArrayList<Long> tiempos, ArrayList<Float> puntajes, ArrayList<Integer> intentos, float score) {
         this.nombre = nombre;
         this.contraseña = contraseña;
         this.tiempos = tiempos;
         this.puntajes = puntajes;
         this.intentos = intentos;
         this.score = score;
+        this.ID = ID;
     }
 
     public String getNombre() {

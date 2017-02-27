@@ -62,6 +62,8 @@ public class Juego extends JFrame{
     private final int choiseY;
     private int correctCounter;
     private int questionIndex;
+    private boolean created;
+    private boolean taken;
     
     public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> bancoP){
         //Frame
@@ -85,8 +87,10 @@ public class Juego extends JFrame{
         Name = "";
         Password = "";
         this.rutaP = BDJugadores;
+        created = false;
+        taken = false;
         //Acciones
-        selected_option = 0;
+        selected_option = 1;
         selected_menu = 0;
         selected_choise = 4;
         controls();
@@ -152,6 +156,22 @@ public class Juego extends JFrame{
         graficos.drawString(texto,X,Y);        
     }
     
+    public void drawLevelStatistics(){
+        if(player!=null){
+            drawText("Score: " + player.getPuntajes().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 530);
+            drawText("Time: " + player.getTiempos().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 550);
+            drawText("Score: " + player.getPuntajes().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 530);
+            drawText("Time: " + player.getTiempos().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 550);
+            drawText("Score: " + player.getPuntajes().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 530);
+            drawText("Time: " + player.getTiempos().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 550);
+        }else{
+            drawText("Score: " + 0.0, paleta.getColores().get(paleta.BLUE), 20, 240, 530);
+            drawText("Score: " + 0.0, paleta.getColores().get(paleta.BLUE), 20, 590, 530);
+            drawText("Score: " + 0.0, paleta.getColores().get(paleta.BLUE), 20, 940, 530);
+        }
+        
+    }
+    
     public void drawMenu(){
         String censor = "";
         if(Password.length() !=  0){
@@ -167,23 +187,35 @@ public class Juego extends JFrame{
             case 0:
                 //////Menu principal
                 drawText("Binary Search", paleta.getColores().get(paleta.getBLACK()), 50, 420, 100);
+                drawText("Play", paleta.getColores().get(paleta.getBLACK()), 20, 410, 330);
+                drawText("Scoreboard", paleta.getColores().get(paleta.getBLACK()), 20, 585, 330);
+                drawText("Accounts", paleta.getColores().get(paleta.getBLACK()), 20, 790, 330);
+                drawText("Log out", paleta.getColores().get(paleta.getBLACK()), 20, 610, 510);
                 break;
             case 1:
                 //////Menu de niveles
                 drawText("Level Selection", paleta.getColores().get(paleta.getBLACK()), 50, 420, 100);
-                drawText("Score: " + 0, paleta.getColores().get(paleta.BLUE), 20, 240, 530);
-                drawText("Score: " + 0, paleta.getColores().get(paleta.BLUE), 20, 590, 530);
-                drawText("Score: " + 0, paleta.getColores().get(paleta.BLUE), 20, 940, 530);
+                drawLevelStatistics();
                 break;
             case 2:
                 //////Accounts menu
                 if(selected_option < 2){
                     drawText("Accounts", paleta.getColores().get(paleta.getBLACK()), 50, 500, 100);
                     drawText("Register", paleta.getColores().get(paleta.getBLACK()), 25, 310, 280);
-                    drawText("Login", paleta.getColores().get(paleta.getBLACK()), 25, 860, 280);
+                    if(player==null){
+                        drawText("Log in", paleta.getColores().get(paleta.getBLACK()), 25, 860, 280);
+                    }else{
+                        drawText("Welcome back, "+player.getNombre()+"!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
+                        drawText("Logged in", paleta.getColores().get(paleta.getGREEN()), 25, 860, 280);
+                    }
                 }else if(selected_option >= 2){
                     if(selected_option < 4){
                         drawText("Registration", paleta.getColores().get(paleta.getBLACK()), 50, 500, 100);
+                        if(created){
+                            drawText("New player registered!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
+                        }else if(taken){
+                            drawText("An account already exists with this name!", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
+                        }
                     }else if(selected_option >= 4){
                         drawText("Login", paleta.getColores().get(paleta.getBLACK()), 50, 500, 100);
                     }
@@ -306,32 +338,55 @@ public class Juego extends JFrame{
         */
         if(!existePlayer()){
             try{
-            EscritorDArchivos writer = new EscritorDArchivos(rutaP);
-            String newPlayer = "0,"+Name+","+Password+",0,0,0,0,0,0,0,0,0,0";
-            writer.escribir(newPlayer);
-            writer.cerrar();
-            System.out.println("A new player has been created!");
+                EscritorDArchivos writer = new EscritorDArchivos(rutaP);                
+                String newPlayer = writer.numberOfPlayers()+","+Name+","+Password+",0,0,0,0,0,0,0,0,0,0";
+                writer.escribir(newPlayer);
+                writer.cerrar();
+                created = true;
+                taken = false;
             }catch(Exception e){
                 e.printStackTrace();
             }
+        }else{
+            taken = true;
         }
+    }
+    
+    public void syncData(String[] playerInformation){
+        int ID = Integer.parseInt(playerInformation[0]);
+        ArrayList<Long> tiempos = new ArrayList<Long>();
+        ArrayList<Float> puntos = new ArrayList<Float>();
+        ArrayList<Integer> intentos = new ArrayList<Integer>();
+        tiempos.add(Long.parseLong(playerInformation[3]));
+        tiempos.add(Long.parseLong(playerInformation[4]));
+        tiempos.add(Long.parseLong(playerInformation[5]));
+        puntos.add(Float.parseFloat(playerInformation[6]));
+        puntos.add(Float.parseFloat(playerInformation[7]));
+        puntos.add(Float.parseFloat(playerInformation[8]));
+        intentos.add(Integer.parseInt(playerInformation[9]));
+        intentos.add(Integer.parseInt(playerInformation[10]));
+        intentos.add(Integer.parseInt(playerInformation[11]));
+        player = new Jugador(ID,Name, Password, tiempos, puntos, intentos, Integer.parseInt(playerInformation[12]));        
     }
     
     public void cargarDatos() throws FileNotFoundException, IOException{
         if(existePlayer()){
             LectorDArchivos reader = new LectorDArchivos(rutaP);
-            while(!reader.leerLinea()[0].equals(Name)){}
-            String[] jugador = reader.getLineaActual().split(",");
-            if(jugador[0].equals(Name)){
-                if(jugador[1].equals(Password)){
-                    System.out.println("Logged in!");
-                }else{
-                    System.out.println("Failed to log in");
-                }
+            String[] jugador = reader.leerLinea();
+            while(!jugador[1].equals(Name)){
+                jugador = reader.leerLinea();
+            }
+            if(jugador[2].equals(Password)){
+                syncData(jugador);
+                Name = "";
+                Password = "";
+                selected_option = 0;
+            }else{
+                drawText("Failed to log in", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
             }
             reader.cerrarArchivo();
         }else{
-            System.out.println("Doesn't exist");
+            drawText("Player doesn't exist", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
         }
     }
     
@@ -339,11 +394,13 @@ public class Juego extends JFrame{
         LectorDArchivos reader = new LectorDArchivos(rutaP);
         String[] linea = reader.leerLinea();
         while(linea != null){
-            if(linea[0].equals(Name) && linea[1].equals(Password)){
+            if(linea[1].equals(Name)){
+                reader.cerrarArchivo();
                 return true;
             }
             linea = reader.leerLinea();
         }
+        reader.cerrarArchivo();
         return false;
     }
     
@@ -389,7 +446,6 @@ public class Juego extends JFrame{
                 correctCounter++;
             }
         }
-        Name = "Francisco_Vega";
         if(correctCounter>2){
             hasThePlayerWon(true,X,Y,ancho,alto);
         }else{
@@ -546,7 +602,11 @@ public class Juego extends JFrame{
                                 if(movement == KeyEvent.VK_RIGHT){
                                     selected_option++;
                                 }else if(movement == KeyEvent.VK_LEFT){
-                                    selected_option--;
+                                    if(player!=null){
+                                        selected_option--;
+                                    }else{
+                                        selected_option = 3;
+                                    }
                                 }else if(movement == KeyEvent.VK_ENTER){
                                     graficos.setColor(Color.white);
                                     graficos.setFont(new Font(Font.DIALOG_INPUT, Font.BOLD, 20));
@@ -566,7 +626,11 @@ public class Juego extends JFrame{
                                 break;
                             case 3:
                                 if(movement == KeyEvent.VK_RIGHT){
-                                    selected_option = 0;
+                                    if(player!=null){
+                                        selected_option = 0;
+                                    }else{
+                                        selected_option = 1;
+                                    }
                                 }else if(movement == KeyEvent.VK_LEFT){
                                     selected_option--;
                                 }else if(movement == KeyEvent.VK_ENTER){
@@ -583,16 +647,22 @@ public class Juego extends JFrame{
                             switch(selected_option){
                                 case 0:
                                     if(movement == KeyEvent.VK_RIGHT){
-                                        selected_option++;
+                                        if(player.getPuntajes().get(0)>=3){
+                                            selected_option++;
+                                        }
                                     }else if(movement == KeyEvent.VK_LEFT){
-                                        selected_option = 2;
+                                        if(player.getPuntajes().get(1)>=3){
+                                            selected_option = 2;
+                                        }
                                     }else if (movement == KeyEvent.VK_ENTER){
                                         startLevel(1);
                                     }
                                     break;
                                 case 1:
                                     if(movement == KeyEvent.VK_RIGHT){
-                                        selected_option++;
+                                        if(player.getPuntajes().get(1)>=3){
+                                            selected_option++;
+                                        }
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option--;
                                     }else if (movement == KeyEvent.VK_ENTER){
@@ -613,7 +683,7 @@ public class Juego extends JFrame{
                        break;
                     case 2:
                         if(selected_option < 2){
-                            if(movement == KeyEvent.VK_RIGHT || movement == KeyEvent.VK_LEFT){
+                            if((movement == KeyEvent.VK_RIGHT || movement == KeyEvent.VK_LEFT) && player==null){
                                 selected_option = (selected_option == 0)? 1:0;
                             }else if(movement == KeyEvent.VK_ENTER){
                                 selected_option = (selected_option == 0) ? 2:4;
@@ -627,6 +697,7 @@ public class Juego extends JFrame{
                                 selected_option = 0;
                                 Name = "";
                                 Password = "";
+                                created = false;
                             }
                             
                             if(movement == KeyEvent.VK_RIGHT || movement == KeyEvent.VK_LEFT){
@@ -664,13 +735,15 @@ public class Juego extends JFrame{
                                     if(selected_option == 2 || selected_option == 3){
                                         try {
                                             crearNuevoJugador();
-                                            drawText("New player registered!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
                                         } catch (IOException ex) {
                                             ex.printStackTrace();
                                         }
-                                    }else if(selected_option == 4 || selected_option == 5){
-                                        //Cargar user
-                                        drawText("Welcome back, "+ Name+"!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
+                                    }else if((selected_option == 4 || selected_option == 5) && player==null){
+                                        try {
+                                            cargarDatos();
+                                        } catch (IOException ex) {
+                                            ex.printStackTrace();
+                                        }
                                     }
                                 }
                                 lienzo.getBufferStrategy().show();

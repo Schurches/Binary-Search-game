@@ -72,7 +72,7 @@ public class BinaryProject {
     }
     
     public void cargarJugadores() throws FileNotFoundException, IOException{
-        jugadoresRuta = getClass().getResource("niveles/jugadores.txt").getFile();
+        jugadoresRuta = getClass().getResource("niveles/jugadores.txt").getPath();
         LectorDArchivos reader = new LectorDArchivos(jugadoresRuta);
         ArrayList<String> usuarios = new ArrayList<String>();
         while(reader.getLineaActual()!=null){

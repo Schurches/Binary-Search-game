@@ -23,7 +23,7 @@ public class EscritorDArchivos {
     
     public EscritorDArchivos(String ruta) throws IOException{
         this.ruta = ruta;
-        archivo = new FileWriter(ruta);
+        archivo = new FileWriter(ruta, true);
         escritor = new BufferedWriter(archivo);
     }
     
@@ -32,10 +32,20 @@ public class EscritorDArchivos {
         escritor.newLine();
     }
     
+    public int numberOfPlayers() throws FileNotFoundException, IOException{
+        LectorDArchivos reader = new LectorDArchivos(ruta);
+        int user = 0;
+        String[] lineas = new String[20];
+        while(reader.leerLinea()!=null){
+            user++;
+        }
+        return user;
+    }
+    
     public void sobreescribir(String linea, int usuario) throws FileNotFoundException, IOException{
         LectorDArchivos reader = new LectorDArchivos(ruta);
         int user = 0;
-        String[] lineas = new String[100];
+        String[] lineas = new String[20];
         while(user < usuario && reader.leerLinea()!=null){
             lineas[user] = reader.getLineaActual();
             user++;
