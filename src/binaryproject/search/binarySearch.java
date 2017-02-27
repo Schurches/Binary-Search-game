@@ -18,25 +18,24 @@ public class binarySearch {
     }
     
     
-    public int busqueda(int[] vector, int elemento){
-        int posInicial = 0;
-        int posFinal = vector.length-1;
-        int puntoMedio;
-        
-        while(posInicial <= posFinal){
-            
-            puntoMedio = (posInicial + posFinal)/2;
-            
-            if(vector[puntoMedio] == elemento){
-                return puntoMedio;
-            }else if(elemento > vector[puntoMedio]){
-                posInicial = puntoMedio+1;
+    public int search(int targetValue){
+        int iterations = 0;
+        int lowerBound = 0; 
+        int upperBound = vector.length-1;
+        int guessPosition;
+        while(lowerBound <= upperBound){
+            iterations++;
+            guessPosition = (lowerBound + upperBound)/2;
+            if(vector[guessPosition] == targetValue){
+                System.out.println(iterations);
+                return guessPosition;
+            }else if(targetValue > vector[guessPosition]){
+                lowerBound = guessPosition+1;
             }else{
-                posFinal = puntoMedio-1;
+                upperBound = guessPosition-1;
             }
-            
         }
-        
+        System.out.println(iterations);
         return -1;
     }
     

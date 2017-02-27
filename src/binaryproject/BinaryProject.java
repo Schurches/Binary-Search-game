@@ -8,6 +8,7 @@ package binaryproject;
 import binaryproject.elements.Imagenes;
 import binaryproject.graphics.Juego;
 import binaryproject.search.LectorDArchivos;
+import binaryproject.search.binarySearch;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +36,20 @@ public class BinaryProject {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
+        /*int[] lol = new int[11];
+        lol[0] = 11;
+        lol[1] = 12;
+        lol[2] = 13;
+        lol[3] = 14;
+        lol[4] = 15;
+        lol[5] = 20;
+        lol[6] = 21;
+        lol[7] = 22;
+        lol[8] = 23;
+        lol[9] = 24;
+        lol[10] = 25;
+        binarySearch asd = new binarySearch(lol);
+        asd.search(11);*/ 
         BinaryProject BP = new BinaryProject();
         BP.cargarImagenes();
         BP.cargarJugadores();
@@ -79,7 +94,7 @@ public class BinaryProject {
         //Explicaciones --
         imagenes = new ArrayList<ImageIcon>();
         //Nivel1 -- ID = 1
-        for (int i = 1; i <= 35; i++) {
+        for (int i = 1; i <= 47; i++) {
             imagen = new ImageIcon(getClass().getResource("imagenes/binarySearch"+i+".jpg"));
             imagenes.add(imagen);
         }

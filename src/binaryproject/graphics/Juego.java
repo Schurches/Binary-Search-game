@@ -22,6 +22,7 @@ import java.awt.event.MouseListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
@@ -60,7 +61,7 @@ public class Juego extends JFrame{
     private final int choiseX;
     private final int choiseY;
     private int correctCounter;
-    private int attempts = 0;
+    private int questionIndex;
     
     public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> bancoP){
         //Frame
@@ -136,9 +137,6 @@ public class Juego extends JFrame{
         lista = new ArrayList<Botones>();
         lista.add(new Botones(0, 300, 300, 120, 160, graphicRes.get(0).obtenerImagen(0)));
         lista.add(new Botones(1, 850, 300, 120, 160, graphicRes.get(0).obtenerImagen(0)));
-        //lista.add(new Botones(2, 950, 350, 80, 120, graphicRes.obtenerImagen(0)));
-        //lista.add(new Botones(2, 950, 350, 80, 120, graphicRes.obtenerImagen(0)));
-        //lista.add(new Botones(2, 950, 350, 80, 120, graphicRes.obtenerImagen(0)));
         menu.add(lista);
         //Botones menu 3 (Ganar/Perder & save)
         lista = new ArrayList<Botones>();
@@ -146,7 +144,6 @@ public class Juego extends JFrame{
         lista.add(new Botones(5, 550, 500, 150, 150, graphicRes.get(0).obtenerImagen(7)));
         lista.add(new Botones(6, 750, 500, 150, 150, graphicRes.get(0).obtenerImagen(8)));
         menu.add(lista);
-    
     }
     
     public void drawText(String texto, Color color, int tamaño, int X, int Y){
@@ -165,16 +162,7 @@ public class Juego extends JFrame{
         graficos = lienzo.getBufferStrategy().getDrawGraphics();
         graficos.setColor(paleta.getColores().get(paleta.getWHITE()));
         graficos.fillRect(0, 0, ancho_mapa, alto_mapa);
-        //int choise=0;
         ArrayList<Botones> botones;
-        /*switch(selected_menu){
-                    case 0:
-                        opcion = 0;
-                        break;
-                    case 1:
-                        opcion = 5;
-                        break;
-        }*/
         switch(selected_menu){
             case 0:
                 //////Menu principal
@@ -213,11 +201,21 @@ public class Juego extends JFrame{
                     quiz(1);
                 }
                 break;
-        
+            case 4:
+                //Nivel 2
+                if(selected_option<12){
+                    explicaciones(2);
+                }else{
+                    quiz(2);
+                }
+                break;
+            case 5:
+                quiz(3);
+                break;
         }
         //////Imagen de opciones (BotoneS)
-        if(selected_option==39){
-            botones = menu.get(selected_menu);
+        if(selected_option==39 && selected_menu==3 || selected_option==17 && selected_menu == 4 || selected_menu == 5 && selected_option == 5){
+            botones = menu.get(3);
             for (int i = 0; i < botones.size(); i++) {
                 if((i!=1 || correctCounter<=2)){
                     botones.get(i).dibujar(graficos, selected_choise);
@@ -232,30 +230,34 @@ public class Juego extends JFrame{
         lienzo.getBufferStrategy().show();
     }
     
+    public void showQuestion(int firstQuestionPage, int winningPage, int fontSize){
+        if(selected_option>=firstQuestionPage && selected_option<winningPage){
+            int questionNumb = selected_option-firstQuestionPage;
+            String question = preguntas.get(questionIndex)[0];
+            if(question.length()>80){
+                drawText((questionNumb+1)+"): "+question.split(":")[0], paleta.getColores().get(paleta.getBLACK()), fontSize+5, choiseX-10, choiseY-100);
+                drawText(question.split(":")[1], paleta.getColores().get(paleta.getBLACK()), fontSize+5, choiseX+20, choiseY+(fontSize+5)-100);
+            }else{
+                drawText((questionNumb+1)+"): "+question, paleta.getColores().get(paleta.getBLACK()), fontSize+5, choiseX-10, choiseY-100);
+            }
+            drawText("a): "+preguntas.get(questionIndex)[1], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY);
+            drawText("b): "+preguntas.get(questionIndex)[2], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY+50);
+            drawText("c): "+preguntas.get(questionIndex)[3], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY+100);
+            drawMedals(questionNumb);
+            drawInfo();
+            drawSelectedChoise();
+        }else if(selected_option==winningPage){
+            drawWinningMenu();
+        }
+    }
+    
     public void quiz(int nivel){
-        int questionSize = 20;
         switch(nivel){
             case 1:
-                if(selected_option>33 && selected_option<39){
-                    int questionNumb = selected_option-34;
-                    String question = preguntas.get(questionNumb+(attempts*5))[0];
-                    if(question.length()>80){
-                        drawText((questionNumb+1)+"): "+question.split(":")[0], paleta.getColores().get(paleta.getBLACK()), questionSize+5, choiseX-10, choiseY-100);
-                        drawText(question.split(":")[1], paleta.getColores().get(paleta.getBLACK()), questionSize+5, choiseX+20, choiseY+(questionSize+5)-100);
-                    }else{
-                        drawText((questionNumb+1)+"): "+question, paleta.getColores().get(paleta.getBLACK()), questionSize+5, choiseX-10, choiseY-100);
-                    }
-                    drawText("a): "+preguntas.get(questionNumb+attempts*5)[1], paleta.getColores().get(paleta.getBLACK()), questionSize, choiseX, choiseY);
-                    drawText("b): "+preguntas.get(questionNumb+attempts*5)[2], paleta.getColores().get(paleta.getBLACK()), questionSize, choiseX, choiseY+50);
-                    drawText("c): "+preguntas.get(questionNumb+attempts*5)[3], paleta.getColores().get(paleta.getBLACK()), questionSize, choiseX, choiseY+100);
-                    drawMedals(questionNumb);
-                    drawInfo();
-                    drawSelectedChoise();
-                }else if(selected_option==39){
-                    drawWinningMenu();
-                }
+                showQuestion(34, 39, 20);
                 break;
             case 2:
+                showQuestion(12, 17, 20);
                 break;
             case 3:
                 break;
@@ -287,9 +289,9 @@ public class Juego extends JFrame{
     
     public void explicaciones(int nivel){
         if(nivel==1){
-            graficos.drawImage(graphicRes.get(1).obtenerImagen(selected_option).getImage(), 0, 0, ancho_mapa, alto_mapa, null);
-        }else{
-            
+            graficos.drawImage(graphicRes.get(1).obtenerImagen(selected_option).getImage(), 0, 0, ancho_mapa-10, alto_mapa-10, null);
+        }else if(nivel==2){
+            graficos.drawImage(graphicRes.get(1).obtenerImagen(selected_option+35).getImage(), 0, 0, ancho_mapa-10, alto_mapa-10, null);
         }
     }
     
@@ -345,19 +347,16 @@ public class Juego extends JFrame{
         return false;
     }
     
-    public void drawWinningMenu(){
-        correctCounter = 0;
-        for (int i = 0; i < 5; i++) {
-            if(gatheredMedals[i]){
-                correctCounter++;
-            }
-        }
-        int X = 350;
-        int Y = 150;
-        int ancho = 100;
-        int alto = 80;
-        Name = "Francisco_Vega";
-        if(correctCounter>2){
+    /***
+     * Escribe en pantalla el desempeño del jugador que acaba de cursar el nivel
+     * @param won Si el gano el nivel o lo perdio (true = gana / false = pierde)
+     * @param X pivote en X donde preferencialmente apareceran los mensajes
+     * @param Y pivote en X donde preferencialmente apareceran los mensajes
+     * @param ancho ancho de las imagenes (medallas)
+     * @param alto alto de las imagenes (medallas)
+     */
+    public void hasThePlayerWon(boolean won, int X, int Y, int ancho, int alto){
+        if(won){
             drawText("Congratulations "+Name+", You've passed this test!", paleta.getColores().get(paleta.getGREEN()),25, X-100, Y-50);
             graficos.drawImage(graphicRes.get(0).obtenerImagen(4).getImage(), X-25, Y, ancho, alto, null);
             for (int i = 1; i <= correctCounter; i++) {
@@ -374,13 +373,154 @@ public class Juego extends JFrame{
             drawText("You've scored: "+correctCounter+".0 since you answered "+correctCounter+" questions correctly", paleta.getColores().get(paleta.getBLACK()), 25, X-180, Y+50+alto+50);
             drawText("Take it easy, rome wasn't built in a day.", paleta.getColores().get(paleta.getRED()), 30, X-120, Y+50+alto+150);
         }
-    }
     
-    public boolean isAnswerCorrect(){
-        if(selected_choise==Integer.parseInt(preguntas.get(selected_option-34+attempts*5)[4])){
+    }
+    /***
+     * Dibuja la informacion del ultimo menu (Si gano el jugador o no)
+     */
+    public void drawWinningMenu(){
+        int X = 350;
+        int Y = 150;
+        int ancho = 100;
+        int alto = 80;
+        correctCounter = 0;
+        for (int i = 0; i < 5; i++) {
+            if(gatheredMedals[i]){
+                correctCounter++;
+            }
+        }
+        Name = "Francisco_Vega";
+        if(correctCounter>2){
+            hasThePlayerWon(true,X,Y,ancho,alto);
+        }else{
+            hasThePlayerWon(false, X, Y, ancho, alto);
+        }
+    }
+    /***
+     * Verifica si la respuesta seleccionada es la correcta.
+     * @param index posicion de la pregunta en el vector
+     * @return      Si la opcion seleccionada es la correcta
+     */
+    public boolean isAnswerCorrect(int index){
+        if(selected_choise==Integer.parseInt(preguntas.get(index)[4])){
             return true;
         }
         return false;
+    }
+    
+    /***
+     * Carga la explicacion del nivel (1 o 2)
+     * @param level nivel a cargar
+     */
+    public void startLevel(int level){
+        switch (level){
+            case 1:
+                selected_menu = 3;
+                break;
+            case 2:
+                selected_menu = 4;
+                break;
+            case 3:
+                selected_menu = 5;
+                break;
+        }
+        selected_option = 0;
+        selected_choise = 4;
+    }
+    
+    public void loadNextQuestion(int level){
+        if(level==1){
+            questionIndex = (int) Math.floor(Math.random()*10);
+        }else if(level==2){
+            questionIndex = (int) Math.floor(Math.random()*10)+10;
+        }else{
+            questionIndex = (int) Math.floor(Math.random()*10)+20;
+        }   
+    }
+    
+    /***
+     * Funcion para moverse a traves de las opciones explicaciones y las opciones de respuesta de cada nivel
+     * @param firstQuestionIndex index de la primera pregunta
+     * @param winningScreen index del screen de ganar/perder
+     * @param direction direccion a moverse. 0 = arriba; 1 = derecha; 2 = abajo; 3 = izquierda
+     * @param level nivel actual
+     */
+    public void moveThroughLevelOptions(int firstQuestionIndex, int winningScreen, int direction, int level){
+        switch(direction){
+            case 0: //up
+                if(selected_choise>1 && selected_option>=firstQuestionIndex  && selected_option < winningScreen){
+                    selected_choise--;
+                }
+                break;
+            case 1: //right
+                if(selected_option<firstQuestionIndex){
+                    selected_option++;
+                    if(selected_option==firstQuestionIndex){
+                        selected_choise = 1;
+                        loadNextQuestion(level);
+                    }
+                }
+                //Save/Replay/Exit
+                else if(selected_option == winningScreen){
+                    if(selected_choise < 6 && correctCounter<=2){
+                        selected_choise++;
+                    }else if(selected_choise < 6 && correctCounter>=3){
+                        selected_choise = 6;
+                    }
+                }
+                break;
+            case 2: //down
+                if(selected_choise<3 && selected_option>=firstQuestionIndex && selected_option < winningScreen){
+                    selected_choise++;
+                }
+                break;
+            case 3: //left
+                //Navigate through explanations
+                if(selected_option!=0 && selected_option < firstQuestionIndex){
+                    selected_option--;
+                }
+                //Save/Replay/Exit
+                else if(selected_option == winningScreen){
+                    if(selected_choise > 4 && correctCounter >=3){
+                        selected_choise = 4;
+                    }else if(selected_choise > 4 && correctCounter<=2){
+                        selected_choise--;
+                    }
+                }
+                break;
+            case 4: //enter
+                //Select answer
+                if(selected_option>=firstQuestionIndex && selected_option < winningScreen){
+                    if(isAnswerCorrect(questionIndex)){
+                        gatheredMedals[selected_option-firstQuestionIndex] = true;
+                    }
+                    selected_choise = 1;
+                    selected_option++;
+                    if(selected_option == winningScreen){
+                        selected_choise = 4;
+                    }else{
+                        loadNextQuestion(level);
+                    }
+                }
+                //Choose option (Save/Replay/Exit)
+                else if(selected_option==winningScreen){
+                    switch(selected_choise){
+                        case 4: //Save 
+                            break;
+                        case 5: //Retry
+                            selected_choise = 1;
+                            //If attempts > 1 then make skip available
+                            break;
+                        case 6: //Return to level menu
+                            selected_menu = 1;
+                            break;
+                    }
+                    selected_option = 0;
+                    correctCounter = 0;
+                    gatheredMedals = new boolean[5];
+                }      
+                break;
+        }
     }
     
     public void controls(){
@@ -447,9 +587,7 @@ public class Juego extends JFrame{
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option = 2;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        selected_menu = 3;
-                                        selected_option = 0;
-                                        selected_choise = 4;
+                                        startLevel(1);
                                     }
                                     break;
                                 case 1:
@@ -458,9 +596,7 @@ public class Juego extends JFrame{
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option--;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        //selected_menu = 4;
-                                        //Explicacion nivel 2
-                                        selected_choise = 4;
+                                        startLevel(2);
                                     }
                                     break;
                                 case 2:
@@ -469,9 +605,7 @@ public class Juego extends JFrame{
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option--;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        //selected_menu = 5;
-                                        //Quiz nivel 3
-                                        selected_choise = 4;
+                                        //startLevel(3);
                                     }
                                     break;
                             }
@@ -529,12 +663,11 @@ public class Juego extends JFrame{
                                 }else{
                                     if(selected_option == 2 || selected_option == 3){
                                         try {
-                                            //Crear nuevo jugador
                                             crearNuevoJugador();
+                                            drawText("New player registered!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
                                         } catch (IOException ex) {
                                             ex.printStackTrace();
                                         }
-                                        drawText("New player registered!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
                                     }else if(selected_option == 4 || selected_option == 5){
                                         //Cargar user
                                         drawText("Welcome back, "+ Name+"!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
@@ -545,73 +678,35 @@ public class Juego extends JFrame{
                         }
                         break;
                     case 3:
-                        
-                    if(movement==KeyEvent.VK_RIGHT){
-                        if(selected_option<34){
-                            selected_option++;
-                            if(selected_option==34){
-                                selected_choise = 1;
-                            }
-                        }else if(selected_option == 39){
-                            if(selected_choise < 6 && correctCounter<=2){
-                                selected_choise++;
-                            }else if(selected_choise < 6 && correctCounter>=3){
-                                selected_choise = 6;
-                            }
+                        //Nivel 1
+                        if(movement==KeyEvent.VK_UP){
+                            moveThroughLevelOptions(34, 39, 0, 1);
+                        }else if(movement==KeyEvent.VK_RIGHT){
+                            moveThroughLevelOptions(34, 39, 1, 1);
+                        }else if(movement==KeyEvent.VK_DOWN){
+                            moveThroughLevelOptions(34, 39, 2, 1);
+                        }else if(movement==KeyEvent.VK_LEFT){
+                            moveThroughLevelOptions(34, 39, 3, 1);
+                        }else if(movement==KeyEvent.VK_ENTER){
+                            moveThroughLevelOptions(34, 39, 4, 1);
                         }
-                    }else if(movement==KeyEvent.VK_LEFT){
-                        if(selected_option!=0 && selected_option < 34){
-                            selected_option--;
-                        }else if(selected_option == 39){
-                            if(selected_choise > 4 && correctCounter >=3){
-                                selected_choise = 4;
-                            }else if(selected_choise > 4 && correctCounter<=2){
-                                selected_choise--;
-                            }
-                            
+                        break;
+                    case 4:
+                        //Nivel 2
+                        if(movement==KeyEvent.VK_UP){
+                            moveThroughLevelOptions(12, 17, 0, 2);
+                        }else if(movement==KeyEvent.VK_RIGHT){
+                            moveThroughLevelOptions(12, 17, 1, 2);
+                        }else if(movement==KeyEvent.VK_DOWN){
+                            moveThroughLevelOptions(12, 17, 2, 2);
+                        }else if(movement==KeyEvent.VK_LEFT){
+                            moveThroughLevelOptions(12, 17, 3, 2);
+                        }else if(movement==KeyEvent.VK_ENTER){
+                            moveThroughLevelOptions(12, 17, 4, 2);
                         }
-                    }
-                    if(movement==KeyEvent.VK_UP){
-                        if(selected_choise>1 && selected_option>33 && selected_option < 39){
-                            selected_choise--;
-                        }
-                    }else if(movement==KeyEvent.VK_DOWN){
-                        if(selected_choise<3 && selected_option>33 && selected_option < 39){
-                            selected_choise++;
-                        }
-                    }
-                    if(movement==KeyEvent.VK_ENTER){
-                        if(selected_option>=34 && selected_option < 39){
-                            if(isAnswerCorrect()){
-                                gatheredMedals[selected_option-34] = true;
-                            }
-                            selected_choise = 1;
-                            selected_option++;
-                            if(selected_option == 39){
-                                selected_choise = 4;
-                            }
-                        }else if(selected_option==39){
-                            switch(selected_choise){
-                                case 4: //Save 
-                                    break;
-                                case 5: //Retry
-                                    selected_choise = 1;
-                                    if(attempts == 0){
-                                        attempts = 1;
-                                    }else{
-                                        attempts = 0;
-                                    }
-                                    break;
-                                case 6: //Return to level menu
-                                    selected_menu = 1;
-                                    break;
-                            }
-                            selected_option = 0;
-                            correctCounter = 0;
-                            gatheredMedals = new boolean[5];
-                        }
-                    }
-                    break;
+                        break;
+                    case 5:
+                        break;
                }
                
            }
