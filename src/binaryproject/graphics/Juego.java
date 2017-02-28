@@ -19,7 +19,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -52,6 +57,7 @@ public class Juego extends JFrame{
     private ArrayList<String[]> preguntas;
     private boolean[] gatheredMedals;
     //Jugadores
+    ArrayList<String[]> jugadores;
     private Jugador player;
     //Cuenta
     private String Name;
@@ -65,7 +71,7 @@ public class Juego extends JFrame{
     private boolean created;
     private boolean taken;
     
-    public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> bancoP){
+    public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> bancoP, ArrayList<String[]> players){
         //Frame
         this.ancho_mapa = 1280;
         this.alto_mapa = getAncho_mapa() / 16*9;
@@ -93,6 +99,7 @@ public class Juego extends JFrame{
         selected_option = 1;
         selected_menu = 0;
         selected_choise = 4;
+        jugadores = players;
         controls();
         crearBotones();
         instanciarHiloPrincipal();
@@ -127,20 +134,20 @@ public class Juego extends JFrame{
         lista = new ArrayList<Botones>();
         //Botones menu 0 (Principal)
         lista.add(new Botones(0, 400, 350, 80, 120, graphicRes.get(0).obtenerImagen(0)));
-        lista.add(new Botones(1, 600, 350, 80, 120, graphicRes.get(0).obtenerImagen(0)));
-        lista.add(new Botones(2, 800, 350, 80, 120, graphicRes.get(0).obtenerImagen(0)));
+        lista.add(new Botones(1, 600, 350, 100, 120, graphicRes.get(0).obtenerImagen(9)));
+        lista.add(new Botones(2, 800, 350, 100, 100, graphicRes.get(0).obtenerImagen(14)));
         lista.add(new Botones(3, 580, 500, 150, 150, graphicRes.get(0).obtenerImagen(8)));
         menu.add(lista);
         //Botones menu 1 (Niveles)
         lista = new ArrayList<Botones>();
-        lista.add(new Botones(0, 240, 350, 80, 120, graphicRes.get(0).obtenerImagen(0)));
-        lista.add(new Botones(1, 600, 350, 80, 120, graphicRes.get(0).obtenerImagen(0)));
-        lista.add(new Botones(2, 950, 350, 80, 120, graphicRes.get(0).obtenerImagen(0)));
+        lista.add(new Botones(0, 240, 350, 120, 120, graphicRes.get(0).obtenerImagen(10)));
+        lista.add(new Botones(1, 600, 350, 120, 120, graphicRes.get(0).obtenerImagen(11), graphicRes.get(0).obtenerImagen(13)));
+        lista.add(new Botones(2, 950, 350, 120, 120, graphicRes.get(0).obtenerImagen(12), graphicRes.get(0).obtenerImagen(13)));
         menu.add(lista);
-        //Botones menu 2 (Login)
+        //Botones menu 2 (Accounts)
         lista = new ArrayList<Botones>();
-        lista.add(new Botones(0, 300, 300, 120, 160, graphicRes.get(0).obtenerImagen(0)));
-        lista.add(new Botones(1, 850, 300, 120, 160, graphicRes.get(0).obtenerImagen(0)));
+        lista.add(new Botones(0, 300, 300, 140, 140, graphicRes.get(0).obtenerImagen(15)));
+        lista.add(new Botones(1, 850, 300, 140, 140, graphicRes.get(0).obtenerImagen(16), graphicRes.get(0).obtenerImagen(13)));
         menu.add(lista);
         //Botones menu 3 (Ganar/Perder & save)
         lista = new ArrayList<Botones>();
@@ -160,16 +167,22 @@ public class Juego extends JFrame{
         if(player!=null){
             drawText("Score: " + player.getPuntajes().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 530);
             drawText("Time: " + player.getTiempos().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 550);
-            drawText("Score: " + player.getPuntajes().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 530);
-            drawText("Time: " + player.getTiempos().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 550);
-            drawText("Score: " + player.getPuntajes().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 530);
-            drawText("Time: " + player.getTiempos().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 550);
+            drawText("Attempts: " + player.getIntentos().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 570);
+            if(player.getIntentos().get(1) != 0){
+                drawText("Score: " + player.getPuntajes().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 530);
+                drawText("Time: " + player.getTiempos().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 550);
+                drawText("Attempts: " + player.getIntentos().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 570);
+            }
+            if(player.getIntentos().get(2) != 0){
+                drawText("Score: " + player.getPuntajes().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 530);
+                drawText("Time: " + player.getTiempos().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 550);
+                drawText("Attempts: " + player.getIntentos().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 570);
+            }
         }else{
             drawText("Score: " + 0.0, paleta.getColores().get(paleta.BLUE), 20, 240, 530);
             drawText("Score: " + 0.0, paleta.getColores().get(paleta.BLUE), 20, 590, 530);
             drawText("Score: " + 0.0, paleta.getColores().get(paleta.BLUE), 20, 940, 530);
         }
-        
     }
     
     public void drawMenu(){
@@ -188,7 +201,7 @@ public class Juego extends JFrame{
                 //////Menu principal
                 drawText("Binary Search", paleta.getColores().get(paleta.getBLACK()), 50, 420, 100);
                 drawText("Play", paleta.getColores().get(paleta.getBLACK()), 20, 410, 330);
-                drawText("Scoreboard", paleta.getColores().get(paleta.getBLACK()), 20, 585, 330);
+                drawText("Leaderboard", paleta.getColores().get(paleta.getBLACK()), 20, 585, 330);
                 drawText("Accounts", paleta.getColores().get(paleta.getBLACK()), 20, 790, 330);
                 drawText("Log out", paleta.getColores().get(paleta.getBLACK()), 20, 610, 510);
                 break;
@@ -250,13 +263,35 @@ public class Juego extends JFrame{
             botones = menu.get(3);
             for (int i = 0; i < botones.size(); i++) {
                 if((i!=1 || correctCounter<=2)){
-                    botones.get(i).dibujar(graficos, selected_choise);
+                    botones.get(i).dibujar(graficos, selected_choise,false);
                 }
             }
         }else if((selected_menu<3) && (selected_menu!=2 || selected_option<2)){
             botones = menu.get(selected_menu);
-            for (int i = 0; i < botones.size(); i++) {
-                botones.get(i).dibujar(graficos, selected_option);
+            if(selected_menu==0){
+                for (int i = 0; i < botones.size(); i++) {
+                    botones.get(i).dibujar(graficos, selected_option, false);
+                }
+            }else{
+                botones.get(0).dibujar(graficos, selected_option, false);
+            }
+            if(selected_menu == 1){
+                if(player.getPuntajes().get(0) > 2){
+                    botones.get(1).dibujar(graficos, selected_option, false);
+                }else{
+                    botones.get(1).dibujar(graficos, selected_option, true);
+                }
+                if(player.getPuntajes().get(1) > 2){
+                    botones.get(2).dibujar(graficos, selected_option, false);
+                }else{
+                    botones.get(2).dibujar(graficos, selected_option, true);
+                }
+            }else if(selected_menu == 2){
+                if(player!=null){
+                    botones.get(1).dibujar(graficos, selected_option, true);
+                }else{
+                    botones.get(1).dibujar(graficos, selected_option, false);
+                }
             }
         }
         lienzo.getBufferStrategy().show();
@@ -336,23 +371,18 @@ public class Juego extends JFrame{
         (Score)
            0
         */
-        if(!existePlayer()){
-            try{
-                EscritorDArchivos writer = new EscritorDArchivos(rutaP);                
-                String newPlayer = writer.numberOfPlayers()+","+Name+","+Password+",0,0,0,0,0,0,0,0,0,0";
-                writer.escribir(newPlayer);
-                writer.cerrar();
-                created = true;
-                taken = false;
-            }catch(Exception e){
-                e.printStackTrace();
-            }
+        int ID = existePlayer();
+        if(ID == jugadores.size()){
+            String newPlayer = ID+","+Name+","+Password+",0,0,0,0,0,0,0,0,0,0";
+            jugadores.add(newPlayer.split(","));
+            created = true;
+            taken = false;
         }else{
             taken = true;
         }
     }
     
-    public void syncData(String[] playerInformation){
+    public Jugador toPlayerData(String[] playerInformation){
         int ID = Integer.parseInt(playerInformation[0]);
         ArrayList<Long> tiempos = new ArrayList<Long>();
         ArrayList<Float> puntos = new ArrayList<Float>();
@@ -366,42 +396,49 @@ public class Juego extends JFrame{
         intentos.add(Integer.parseInt(playerInformation[9]));
         intentos.add(Integer.parseInt(playerInformation[10]));
         intentos.add(Integer.parseInt(playerInformation[11]));
-        player = new Jugador(ID,Name, Password, tiempos, puntos, intentos, Integer.parseInt(playerInformation[12]));        
+        return new Jugador(ID,playerInformation[1], playerInformation[2], tiempos, puntos, intentos, Float.parseFloat(playerInformation[12]));        
     }
     
-    public void cargarDatos() throws FileNotFoundException, IOException{
-        if(existePlayer()){
-            LectorDArchivos reader = new LectorDArchivos(rutaP);
-            String[] jugador = reader.leerLinea();
-            while(!jugador[1].equals(Name)){
-                jugador = reader.leerLinea();
-            }
-            if(jugador[2].equals(Password)){
-                syncData(jugador);
+    public void actualizarDatos() throws IOException{
+        player.actualizarPuntaje();
+        jugadores.set(player.getID(), player.playerInfoAsArray());
+        EscritorDArchivos writer = new EscritorDArchivos(rutaP,false); //Esto es para que el archivo se vuelva a crear
+        writer.cerrar(); 
+        writer = new EscritorDArchivos(rutaP, true); //ahora si se escribe en el
+        for (int i = 0; i < jugadores.size(); i++) {
+            Jugador Temp = toPlayerData(jugadores.get(i));
+            writer.escribir(Temp.toString());
+        }
+        writer.cerrar();
+    }
+    
+    public void cargarDatos(){
+        int ID = existePlayer();
+        if(ID == jugadores.size()){
+            drawText("Player doesn't exist", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
+        }else{
+            if(jugadores.get(ID)[2].equals(Password)){
+                player = toPlayerData(jugadores.get(ID));
                 Name = "";
                 Password = "";
                 selected_option = 0;
             }else{
                 drawText("Failed to log in", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
             }
-            reader.cerrarArchivo();
-        }else{
-            drawText("Player doesn't exist", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
         }
     }
     
-    public boolean existePlayer() throws FileNotFoundException, IOException{
-        LectorDArchivos reader = new LectorDArchivos(rutaP);
-        String[] linea = reader.leerLinea();
-        while(linea != null){
-            if(linea[1].equals(Name)){
-                reader.cerrarArchivo();
-                return true;
+    public int existePlayer(){
+        boolean found = false;
+        int index = 0;
+        while(index < jugadores.size() && !found){
+            if(jugadores.get(index)[1].equals(Name)){
+                return index;
+            }else{
+                index++;
             }
-            linea = reader.leerLinea();
         }
-        reader.cerrarArchivo();
-        return false;
+        return index;
     }
     
     /***
@@ -414,7 +451,7 @@ public class Juego extends JFrame{
      */
     public void hasThePlayerWon(boolean won, int X, int Y, int ancho, int alto){
         if(won){
-            drawText("Congratulations "+Name+", You've passed this test!", paleta.getColores().get(paleta.getGREEN()),25, X-100, Y-50);
+            drawText("Congratulations "+player.getNombre()+", You've passed this test!", paleta.getColores().get(paleta.getGREEN()),25, X-100, Y-50);
             graficos.drawImage(graphicRes.get(0).obtenerImagen(4).getImage(), X-25, Y, ancho, alto, null);
             for (int i = 1; i <= correctCounter; i++) {
                 graficos.drawImage(graphicRes.get(0).obtenerImagen(2).getImage(), X+i*110, Y, ancho, alto, null);
@@ -422,7 +459,7 @@ public class Juego extends JFrame{
             drawText("You've scored: "+correctCounter+".0 since you answered "+correctCounter+" questions correctly", paleta.getColores().get(paleta.getBLACK()), 25, X-150, Y+50+alto+50);
             drawText("A new test has been unlocked!", paleta.getColores().get(paleta.getGREEN()), 30, X, Y+50+alto+150);
         }else{
-            drawText("I'm afraid that something went wrong, "+Name+". You'll have to study harder!", paleta.getColores().get(paleta.getRED()),22, X-280, Y-50);
+            drawText("I'm afraid that something went wrong, "+player.getNombre()+". You'll have to study harder!", paleta.getColores().get(paleta.getRED()),22, X-280, Y-50);
             graficos.drawImage(graphicRes.get(0).obtenerImagen(5).getImage(), X+25, Y, ancho, alto, null);
             for (int i = 1; i <= correctCounter; i++) {
                 graficos.drawImage(graphicRes.get(0).obtenerImagen(2).getImage(), X+25+i*200, Y, ancho, alto, null);
@@ -501,7 +538,7 @@ public class Juego extends JFrame{
      * @param direction direccion a moverse. 0 = arriba; 1 = derecha; 2 = abajo; 3 = izquierda
      * @param level nivel actual
      */
-    public void moveThroughLevelOptions(int firstQuestionIndex, int winningScreen, int direction, int level){
+    public void moveThroughLevelOptions(int firstQuestionIndex, int winningScreen, int direction, int level) throws IOException{
         switch(direction){
             case 0: //up
                 if(selected_choise>1 && selected_option>=firstQuestionIndex  && selected_option < winningScreen){
@@ -562,18 +599,52 @@ public class Juego extends JFrame{
                 else if(selected_option==winningScreen){
                     switch(selected_choise){
                         case 4: //Save 
+                            //If the progress is saved at level 1
+                            if(winningScreen == 39){
+                                if(correctCounter > player.getPuntajes().get(0)){
+                                    String correctas = correctCounter+".0";
+                                    player.getPuntajes().set(0, Float.parseFloat(correctas));
+                                    if(correctCounter > 2){
+                                        selected_menu = 1;
+                                        selected_option = 0;
+                                        correctCounter = 0;
+                                        gatheredMedals = new boolean[5];
+                                    }
+                                }
+                                actualizarDatos();
+                            }else if(winningScreen == 17){ //If the progress is saved at level 2
+                                if(correctCounter > player.getPuntajes().get(1)){
+                                    String correctas = correctCounter+".0";
+                                    player.getPuntajes().set(1, Float.parseFloat(correctas));
+                                    if(correctCounter>2){
+                                        selected_menu = 1;
+                                        selected_option = 0;
+                                        correctCounter = 0;
+                                        gatheredMedals = new boolean[5];
+                                    }
+                                }
+                                actualizarDatos();
+                            }
                             break;
                         case 5: //Retry
+                            selected_option = 0;
                             selected_choise = 1;
-                            //If attempts > 1 then make skip available
+                            if(winningScreen==39){
+                                player.getIntentos().set(0, player.getIntentos().get(0)+1);
+                            }else if(winningScreen==17){
+                                player.getIntentos().set(1, player.getIntentos().get(1)+1);
+                            }
+                            correctCounter = 0;
+                            gatheredMedals = new boolean[5];
                             break;
                         case 6: //Return to level menu
                             selected_menu = 1;
+                            selected_option = 0;
+                            selected_choise = 1;
+                            correctCounter = 0;
+                            gatheredMedals = new boolean[5];
                             break;
                     }
-                    selected_option = 0;
-                    correctCounter = 0;
-                    gatheredMedals = new boolean[5];
                 }      
                 break;
         }
@@ -647,26 +718,24 @@ public class Juego extends JFrame{
                             switch(selected_option){
                                 case 0:
                                     if(movement == KeyEvent.VK_RIGHT){
-                                        if(player.getPuntajes().get(0)>=3){
-                                            selected_option++;
-                                        }
+                                        selected_option++;
                                     }else if(movement == KeyEvent.VK_LEFT){
-                                        if(player.getPuntajes().get(1)>=3){
-                                            selected_option = 2;
-                                        }
+                                        selected_option = 2;
                                     }else if (movement == KeyEvent.VK_ENTER){
                                         startLevel(1);
+                                        player.getIntentos().set(0, player.getIntentos().get(0)+1);
                                     }
                                     break;
                                 case 1:
                                     if(movement == KeyEvent.VK_RIGHT){
-                                        if(player.getPuntajes().get(1)>=3){
-                                            selected_option++;
-                                        }
+                                        selected_option++;
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option--;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        startLevel(2);
+                                        if(player.getPuntajes().get(0)>2){
+                                            startLevel(2);
+                                            player.getIntentos().set(1, player.getIntentos().get(1)+1);
+                                        }
                                     }
                                     break;
                                 case 2:
@@ -675,7 +744,9 @@ public class Juego extends JFrame{
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option--;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        //startLevel(3);
+                                        if(player.getPuntajes().get(1) > 2){
+                                            startLevel(3);
+                                        }
                                     }
                                     break;
                             }
@@ -683,10 +754,16 @@ public class Juego extends JFrame{
                        break;
                     case 2:
                         if(selected_option < 2){
-                            if((movement == KeyEvent.VK_RIGHT || movement == KeyEvent.VK_LEFT) && player==null){
+                            if(movement == KeyEvent.VK_RIGHT || movement == KeyEvent.VK_LEFT){
                                 selected_option = (selected_option == 0)? 1:0;
                             }else if(movement == KeyEvent.VK_ENTER){
-                                selected_option = (selected_option == 0) ? 2:4;
+                                if(selected_option==0){
+                                        selected_option = 2;
+                                }else{
+                                    if(player==null){
+                                        selected_option = 4;
+                                    }
+                                }
                             }else if(movement == KeyEvent.VK_ESCAPE){
                                 selected_menu = 0;
                                 selected_option = 2;
@@ -739,11 +816,7 @@ public class Juego extends JFrame{
                                             ex.printStackTrace();
                                         }
                                     }else if((selected_option == 4 || selected_option == 5) && player==null){
-                                        try {
-                                            cargarDatos();
-                                        } catch (IOException ex) {
-                                            ex.printStackTrace();
-                                        }
+                                        cargarDatos();
                                     }
                                 }
                                 lienzo.getBufferStrategy().show();
@@ -751,31 +824,41 @@ public class Juego extends JFrame{
                         }
                         break;
                     case 3:
+                            //If attempts > 1 then make skip available
                         //Nivel 1
-                        if(movement==KeyEvent.VK_UP){
-                            moveThroughLevelOptions(34, 39, 0, 1);
-                        }else if(movement==KeyEvent.VK_RIGHT){
-                            moveThroughLevelOptions(34, 39, 1, 1);
-                        }else if(movement==KeyEvent.VK_DOWN){
-                            moveThroughLevelOptions(34, 39, 2, 1);
-                        }else if(movement==KeyEvent.VK_LEFT){
-                            moveThroughLevelOptions(34, 39, 3, 1);
-                        }else if(movement==KeyEvent.VK_ENTER){
-                            moveThroughLevelOptions(34, 39, 4, 1);
+                        try{
+                            if(movement==KeyEvent.VK_UP){
+                                moveThroughLevelOptions(34, 39, 0, 1);
+                            }else if(movement==KeyEvent.VK_RIGHT){
+                                moveThroughLevelOptions(34, 39, 1, 1);
+                            }else if(movement==KeyEvent.VK_DOWN){
+                                moveThroughLevelOptions(34, 39, 2, 1);
+                            }else if(movement==KeyEvent.VK_LEFT){
+                                moveThroughLevelOptions(34, 39, 3, 1);
+                            }else if(movement==KeyEvent.VK_ENTER){
+                                moveThroughLevelOptions(34, 39, 4, 1);
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
                         }
                         break;
                     case 4:
+                            //If attempts > 1 then make skip available
                         //Nivel 2
-                        if(movement==KeyEvent.VK_UP){
-                            moveThroughLevelOptions(12, 17, 0, 2);
-                        }else if(movement==KeyEvent.VK_RIGHT){
-                            moveThroughLevelOptions(12, 17, 1, 2);
-                        }else if(movement==KeyEvent.VK_DOWN){
-                            moveThroughLevelOptions(12, 17, 2, 2);
-                        }else if(movement==KeyEvent.VK_LEFT){
-                            moveThroughLevelOptions(12, 17, 3, 2);
-                        }else if(movement==KeyEvent.VK_ENTER){
-                            moveThroughLevelOptions(12, 17, 4, 2);
+                        try{
+                            if(movement==KeyEvent.VK_UP){
+                                moveThroughLevelOptions(12, 17, 0, 2);
+                            }else if(movement==KeyEvent.VK_RIGHT){
+                                moveThroughLevelOptions(12, 17, 1, 2);
+                            }else if(movement==KeyEvent.VK_DOWN){
+                                moveThroughLevelOptions(12, 17, 2, 2);
+                            }else if(movement==KeyEvent.VK_LEFT){
+                                moveThroughLevelOptions(12, 17, 3, 2);
+                            }else if(movement==KeyEvent.VK_ENTER){
+                                moveThroughLevelOptions(12, 17, 4, 2);
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
                         }
                         break;
                     case 5:
@@ -792,7 +875,6 @@ public class Juego extends JFrame{
            public void keyReleased(KeyEvent e) {
            }
        });
-        
         
         lienzo.addMouseListener(new MouseListener() {
             @Override
@@ -816,7 +898,27 @@ public class Juego extends JFrame{
             public void mouseExited(MouseEvent e) {
             }
         });
-   
+        
+        this.addWindowListener(new WindowAdapter() {
+            
+            @Override
+            public void windowClosing(WindowEvent e) {
+                ////Guardar el log en el archivo excel
+                try{
+                    File archivo = new File("logs.xls");
+                    FileInputStream escritor = new FileInputStream(archivo);
+                    
+                    //HSSFWorkbook wb = new HSSFWorkbook(archivo);
+                
+                
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }
+                
+            }
+        }
+        );
+        
    }
     
     

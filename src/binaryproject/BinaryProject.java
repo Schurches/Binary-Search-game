@@ -22,14 +22,14 @@ public class BinaryProject {
 
     private ArrayList<ArrayList<ImageIcon>> recurGraf;
     private ArrayList<ImageIcon> recurMusic;
-    private ArrayList<String> jugadores;
+    private ArrayList<String[]> jugadores;
     private ArrayList<Object> preguntas;
     private ArrayList<String[]> listaPreg;
     String jugadoresRuta;
     public BinaryProject(){
         recurGraf = new ArrayList<ArrayList<ImageIcon>>();
         recurMusic = new ArrayList<ImageIcon>();
-        jugadores = new ArrayList<String>();
+        jugadores = new ArrayList<String[]>();
         listaPreg = new ArrayList<String[]>();
     }
     /**
@@ -54,7 +54,7 @@ public class BinaryProject {
         BP.cargarImagenes();
         BP.cargarJugadores();
         BP.cargarBancoDePreguntas();
-        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta, BP.listaPreg);
+        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta, BP.listaPreg, BP.jugadores);
         V.setVisible(true);
         V.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         V.getRefresh().start();
@@ -74,20 +74,23 @@ public class BinaryProject {
     public void cargarJugadores() throws FileNotFoundException, IOException{
         jugadoresRuta = getClass().getResource("niveles/jugadores.txt").getPath();
         LectorDArchivos reader = new LectorDArchivos(jugadoresRuta);
-        ArrayList<String> usuarios = new ArrayList<String>();
-        while(reader.getLineaActual()!=null){
-            reader.leerLinea();
-            usuarios.add(reader.getLineaActual());
+        ArrayList<String[]> usuarios = new ArrayList<String[]>();
+        while(reader.leerLinea()!=null){
+            usuarios.add(reader.getLineaActual().split(","));
         }
-        System.out.println("I found it!");
+        jugadores = usuarios;
     }
  
     public void cargarImagenes(){
         ArrayList<ImageIcon> imagenes = new ArrayList<ImageIcon>();
         ImageIcon imagen;
         //Botones -- ID = 0
-        for (int i = 0; i <= 8; i++) {
-            imagen = new ImageIcon(getClass().getResource("imagenes/binarySearch10"+i+".png"));
+        for (int i = 0; i <= 16; i++) {
+            if(i < 10){
+                imagen = new ImageIcon(getClass().getResource("imagenes/binarySearch10"+i+".png"));
+            }else{
+                imagen = new ImageIcon(getClass().getResource("imagenes/binarySearch1"+i+".png"));
+            }
             imagenes.add(imagen);
         }
         recurGraf.add(imagenes);

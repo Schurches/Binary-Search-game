@@ -19,22 +19,52 @@ public class Botones {
     private int Y;
     private int ancho;
     private int alto;
-    private ImageIcon imagen;
+    private ImageIcon unlocked;
+    private ImageIcon locked;
 
+    /***
+     * 
+     * @param INDEX index del boton
+     * @param X posicion en X a dibujarse
+     * @param Y posicion en Y a dibujarse
+     * @param ancho anchura de imagen
+     * @param alto altura de imagen
+     * @param imagen imagen del boton 
+     */
     public Botones(int INDEX, int X, int Y, int ancho, int alto, ImageIcon imagen) {
         this.INDEX = INDEX;
         this.X = X;
         this.Y = Y;
         this.ancho = ancho;
         this.alto = alto;
-        this.imagen = imagen;
+        this.unlocked = imagen;
     }
     
-    public void dibujar(Graphics G, int index){
+    /***
+     * 
+     * @param INDEX index del boton
+     * @param X posicion en X a dibujarse
+     * @param Y posicion en Y a dibujarse
+     * @param ancho anchura de la imagen
+     * @param alto altura de la imagen
+     * @param unlocked Imagen cuando la opcion halla sido desbloqueada
+     * @param locked Imagen cuando aun no se ha desbloqueado la opcion
+     */
+    public Botones(int INDEX, int X, int Y, int ancho, int alto, ImageIcon unlocked, ImageIcon locked) {
+        this.INDEX = INDEX;
+        this.X = X;
+        this.Y = Y;
+        this.ancho = ancho;
+        this.alto = alto;
+        this.unlocked = unlocked;
+        this.locked = locked;
+    }
+    
+    public void dibujar(Graphics G, int index, boolean isLocked){
         if(index == getINDEX()){
-            G.drawImage(getImagen().getImage(), getX()-10, getY()-10, getAncho()+20, getAlto()+20, null);
+            G.drawImage(getImagen(isLocked).getImage(), getX()-10, getY()-10, getAncho()+20, getAlto()+20, null);
         }else{
-            G.drawImage(getImagen().getImage(), getX(), getY(), getAncho(), getAlto(), null);
+            G.drawImage(getImagen(isLocked).getImage(), getX(), getY(), getAncho(), getAlto(), null);
         }
     }
 
@@ -58,8 +88,12 @@ public class Botones {
         return alto;
     }
 
-    public ImageIcon getImagen() {
-        return imagen;
+    public ImageIcon getImagen(boolean isLocked) {
+        if(isLocked){
+            return locked;
+        }else{
+            return unlocked;
+        }
     }
     
     

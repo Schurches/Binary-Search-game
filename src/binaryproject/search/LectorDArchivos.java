@@ -23,29 +23,30 @@ public class LectorDArchivos {
     
     public LectorDArchivos(String ruta) throws FileNotFoundException{
         this.ruta = ruta;
-        archivo = new FileReader(ruta);
-        lector = new BufferedReader(archivo);
-        this.lineaActual = "";
+        this.archivo = new FileReader(ruta);
+        this.lector = new BufferedReader(this.archivo);
+        this.lineaActual = null;
     }
     
     public String[] leerLinea() throws IOException{
-        lineaActual = lector.readLine();
-         if(lineaActual != null){
-            return lineaActual.split(",");
+        this.lineaActual = this.lector.readLine();
+        if(lineaActual != null){
+            return this.lineaActual.split(",");
         }
         return null;
     }
     
     public void cerrarArchivo() throws IOException{
-        lector.close();
+        this.lector.close();
+        this.archivo.close();
     }
 
     public String getRuta() {
-        return ruta;
+        return this.ruta;
     }
 
     public String getLineaActual() {
-        return lineaActual;
+        return this.lineaActual;
     }
     
     

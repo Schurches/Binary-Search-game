@@ -21,53 +21,19 @@ public class EscritorDArchivos {
     private FileWriter archivo;
     private BufferedWriter escritor;
     
-    public EscritorDArchivos(String ruta) throws IOException{
+    public EscritorDArchivos(String ruta, boolean change) throws IOException{
         this.ruta = ruta;
-        archivo = new FileWriter(ruta, true);
-        escritor = new BufferedWriter(archivo);
+        this.archivo = new FileWriter(ruta, change);
+        this.escritor = new BufferedWriter(this.archivo);
     }
     
     public void escribir(String linea) throws IOException{
-        escritor.write(linea);
-        escritor.newLine();
-    }
-    
-    public int numberOfPlayers() throws FileNotFoundException, IOException{
-        LectorDArchivos reader = new LectorDArchivos(ruta);
-        int user = 0;
-        String[] lineas = new String[20];
-        while(reader.leerLinea()!=null){
-            user++;
-        }
-        return user;
-    }
-    
-    public void sobreescribir(String linea, int usuario) throws FileNotFoundException, IOException{
-        LectorDArchivos reader = new LectorDArchivos(ruta);
-        int user = 0;
-        String[] lineas = new String[20];
-        while(user < usuario && reader.leerLinea()!=null){
-            lineas[user] = reader.getLineaActual();
-            user++;
-        }
-        if(reader.getLineaActual() == null){
-            System.out.println("No existe el player");
-        }else if(user == usuario){
-            lineas[user] = linea;
-            user++;
-        }
-        while(reader.leerLinea()!=null){
-            lineas[user] = reader.getLineaActual();
-            user++;
-        }
-        for (int i = 0; i < user; i++) {
-            escribir(lineas[i]);
-        }
-        
+        this.escritor.write(linea);
+        this.escritor.newLine();
     }
     
     public void cerrar() throws IOException{
-        escritor.close();
-        archivo.close();
+        this.escritor.close();
+        this.archivo.close();
     }
 }

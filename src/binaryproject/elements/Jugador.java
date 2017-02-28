@@ -74,8 +74,41 @@ public class Jugador {
     public float getScore() {
         return score;
     }
+
+    public int getID() {
+        return ID;
+    }
+
+    public String getContraseña() {
+        return contraseña;
+    }
     
+    public void actualizarPuntaje(){
+        this.score = (getPuntajes().get(0)+getPuntajes().get(1)+getPuntajes().get(2))/3;
+    }
     
+    public String[] playerInfoAsArray(){
+        return toString().split(",");
+    }
+    
+    @Override
+    public String toString(){
+        String info = "";
+        info = this.getID() + "," +
+               this.getNombre() + "," + 
+               this.getContraseña() + "," +
+               this.getTiempos().get(0) + "," +
+               this.getTiempos().get(1) + "," +
+               this.getTiempos().get(2) + "," +
+               this.getPuntajes().get(0) + "," +
+               this.getPuntajes().get(1) + "," +
+               this.getPuntajes().get(2) + "," +
+               this.getIntentos().get(0) + "," +
+               this.getIntentos().get(1) + "," +
+               this.getIntentos().get(2) + "," +
+               this.getScore();
+        return info;
+    }
     
     
     
