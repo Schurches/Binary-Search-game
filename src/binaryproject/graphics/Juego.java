@@ -24,14 +24,26 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import org.apache.poi.hssf.model.InternalSheet;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  *
@@ -50,12 +62,13 @@ public class Juego extends JFrame{
     private ArrayList<Imagenes> graphicRes;
     private int selected_choise;
     private int selected_option;
-    private int selected_menu; 
-    //0 = main, 1 = levels, 2 = login/register, 3 = nivel1, 4 = nivel2, 5 = nivel3
+    private int selected_menu; //0 = main, 1 = levels, 2 = login/register, 3 = nivel1, 4 = nivel2, 5 = nivel3
     private Colores paleta;
     //Niveles
     private ArrayList<String[]> preguntas;
     private boolean[] gatheredMedals;
+    private int correctCounter;
+    private int questionIndex;
     //Jugadores
     ArrayList<String[]> jugadores;
     private Jugador player;
@@ -63,36 +76,35 @@ public class Juego extends JFrame{
     private String Name;
     private String Password;
     private String rutaP;
+    private String rutaLogs;
+    private boolean created;
+    private boolean taken;
     //Constantes
     private final int choiseX;
     private final int choiseY;
-    private int correctCounter;
-    private int questionIndex;
-    private boolean created;
-    private boolean taken;
     
-    public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> bancoP, ArrayList<String[]> players){
+    public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> bancoP, ArrayList<String[]> players, String logs){
         //Frame
         this.ancho_mapa = 1280;
         this.alto_mapa = getAncho_mapa() / 16*9;
         inicializarFrame();
+        choiseX = 70;
+        choiseY = 400;
         //Recursos
-        Imagenes I;
         graphicRes = new ArrayList<Imagenes>();
+        Imagenes I;
         for (int i = 0; i <= 1; i++) {
             I = new Imagenes(IRes.get(i));
             graphicRes.add(I);
         }
-        preguntas = new ArrayList<String[]>();
         preguntas = bancoP;
         paleta = new Colores();
         gatheredMedals = new boolean[5];
-        choiseX = 70;
-        choiseY = 400;
         //Cuentas
         Name = "";
         Password = "";
         this.rutaP = BDJugadores;
+        this.rutaLogs = logs;
         created = false;
         taken = false;
         //Acciones
@@ -904,60 +916,12 @@ public class Juego extends JFrame{
             @Override
             public void windowClosing(WindowEvent e) {
                 ////Guardar el log en el archivo excel
-                try{
-                    File archivo = new File("logs.xls");
-                    FileInputStream escritor = new FileInputStream(archivo);
-                    
-                    //HSSFWorkbook wb = new HSSFWorkbook(archivo);
-                
-                
-                }catch(Exception ex){
-                    ex.printStackTrace();
-                }
                 
             }
         }
         );
         
    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     ////////////////////////////////////////////////////////////////////////////
     //////////////////////////Getter and Setter/////////////////////////////////
@@ -985,7 +949,5 @@ public class Juego extends JFrame{
     public Canvas getLienzo() {
         return lienzo;
     }
-    
-    
     
 }

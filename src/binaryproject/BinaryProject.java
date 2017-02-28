@@ -9,6 +9,7 @@ import binaryproject.elements.Imagenes;
 import binaryproject.graphics.Juego;
 import binaryproject.search.LectorDArchivos;
 import binaryproject.search.binarySearch;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ public class BinaryProject {
     private ArrayList<Object> preguntas;
     private ArrayList<String[]> listaPreg;
     String jugadoresRuta;
+    String rutaLogs;
+    
     public BinaryProject(){
         recurGraf = new ArrayList<ArrayList<ImageIcon>>();
         recurMusic = new ArrayList<ImageIcon>();
@@ -54,7 +57,7 @@ public class BinaryProject {
         BP.cargarImagenes();
         BP.cargarJugadores();
         BP.cargarBancoDePreguntas();
-        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta, BP.listaPreg, BP.jugadores);
+        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta, BP.listaPreg, BP.jugadores, BP.rutaLogs);
         V.setVisible(true);
         V.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         V.getRefresh().start();
@@ -72,7 +75,12 @@ public class BinaryProject {
     }
     
     public void cargarJugadores() throws FileNotFoundException, IOException{
-        jugadoresRuta = getClass().getResource("niveles/jugadores.txt").getPath();
+        rutaLogs = getClass().getResource("niveles/").getPath();
+        File playerFile = new File(rutaLogs+"jugadores.txt");
+        if(!playerFile.exists()){
+            playerFile.createNewFile();
+        }
+        jugadoresRuta = playerFile.getPath();
         LectorDArchivos reader = new LectorDArchivos(jugadoresRuta);
         ArrayList<String[]> usuarios = new ArrayList<String[]>();
         while(reader.leerLinea()!=null){

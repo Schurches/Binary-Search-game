@@ -7,6 +7,7 @@ package binaryproject.search;
 
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,7 +24,11 @@ public class EscritorDArchivos {
     
     public EscritorDArchivos(String ruta, boolean change) throws IOException{
         this.ruta = ruta;
-        this.archivo = new FileWriter(ruta, change);
+        File playerFile = new File(ruta);
+        if(!playerFile.exists()){
+            playerFile.createNewFile();
+        }
+        this.archivo = new FileWriter(playerFile, change);
         this.escritor = new BufferedWriter(this.archivo);
     }
     
