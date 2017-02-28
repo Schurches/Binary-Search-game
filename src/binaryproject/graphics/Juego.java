@@ -66,6 +66,7 @@ public class Juego extends JFrame{
     private Colores paleta;
     //Niveles
     private ArrayList<String[]> preguntas;
+    private boolean[] questionWasAlreadyShown;
     private boolean[] gatheredMedals;
     private int correctCounter;
     private int questionIndex;
@@ -105,6 +106,7 @@ public class Juego extends JFrame{
         Password = "";
         this.rutaP = BDJugadores;
         this.rutaLogs = logs;
+        this.questionWasAlreadyShown = new boolean[30];
         created = false;
         taken = false;
         //Acciones
@@ -313,7 +315,12 @@ public class Juego extends JFrame{
         if(selected_option>=firstQuestionPage && selected_option<winningPage){
             int questionNumb = selected_option-firstQuestionPage;
             String question = preguntas.get(questionIndex)[0];
-            if(question.length()>80){
+            System.out.println(question);
+            if(question.length()>180){
+                drawText((questionNumb+1)+"): "+question.split(":")[0], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX-10, choiseY-100);
+                drawText(question.split(":")[1], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX+20, choiseY+(fontSize+5)-100);
+                drawText(question.split(":")[2], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX+20, choiseY+2*(fontSize+5)-100);
+            }else if(question.length()>80){
                 drawText((questionNumb+1)+"): "+question.split(":")[0], paleta.getColores().get(paleta.getBLACK()), fontSize+5, choiseX-10, choiseY-100);
                 drawText(question.split(":")[1], paleta.getColores().get(paleta.getBLACK()), fontSize+5, choiseX+20, choiseY+(fontSize+5)-100);
             }else{
@@ -322,6 +329,9 @@ public class Juego extends JFrame{
             drawText("a): "+preguntas.get(questionIndex)[1], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY);
             drawText("b): "+preguntas.get(questionIndex)[2], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY+50);
             drawText("c): "+preguntas.get(questionIndex)[3], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY+100);
+            if(firstQuestionPage==0){
+                drawText("d): "+preguntas.get(questionIndex)[4], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY+150);
+            }
             drawMedals(questionNumb);
             drawInfo();
             drawSelectedChoise();
@@ -339,6 +349,7 @@ public class Juego extends JFrame{
                 showQuestion(12, 17, 20);
                 break;
             case 3:
+                showQuestion(0, 5, 20);
                 break;
         }
     }
@@ -506,8 +517,8 @@ public class Juego extends JFrame{
      * @param index posicion de la pregunta en el vector
      * @return      Si la opcion seleccionada es la correcta
      */
-    public boolean isAnswerCorrect(int index){
-        if(selected_choise==Integer.parseInt(preguntas.get(index)[4])){
+    public boolean isAnswerCorrect(int index, int correctQuestionIndex){
+        if(selected_choise==Integer.parseInt(preguntas.get(index)[correctQuestionIndex])){
             return true;
         }
         return false;
@@ -521,25 +532,38 @@ public class Juego extends JFrame{
         switch (level){
             case 1:
                 selected_menu = 3;
+                selected_choise = 4;
                 break;
             case 2:
                 selected_menu = 4;
+                selected_choise = 4;
                 break;
             case 3:
+                loadNextQuestion(3);
                 selected_menu = 5;
+                selected_choise = 1;
                 break;
         }
+        questionWasAlreadyShown = new boolean[30];
         selected_option = 0;
-        selected_choise = 4;
     }
     
     public void loadNextQuestion(int level){
         if(level==1){
-            questionIndex = (int) Math.floor(Math.random()*10);
+            do{
+                questionIndex = (int) Math.floor(Math.random()*10);
+            }while(questionWasAlreadyShown[questionIndex]);
+            questionWasAlreadyShown[questionIndex] = true;
         }else if(level==2){
-            questionIndex = (int) Math.floor(Math.random()*10)+10;
+            do{
+                questionIndex = (int) Math.floor(Math.random()*10)+10;
+            }while(questionWasAlreadyShown[questionIndex]);
+            questionWasAlreadyShown[questionIndex] = true;
         }else{
-            questionIndex = (int) Math.floor(Math.random()*10)+20;
+            do{
+                questionIndex = (int) Math.floor(Math.random()*10)+20;
+            }while(questionWasAlreadyShown[questionIndex]);
+            questionWasAlreadyShown[questionIndex] = true;
         }   
     }
     
@@ -575,8 +599,14 @@ public class Juego extends JFrame{
                 }
                 break;
             case 2: //down
-                if(selected_choise<3 && selected_option>=firstQuestionIndex && selected_option < winningScreen){
-                    selected_choise++;
+                if(firstQuestionIndex==0){
+                    if(selected_choise<4 && selected_option>=firstQuestionIndex && selected_option < winningScreen){
+                        selected_choise++;
+                    }
+                }else{
+                    if(selected_choise<3 && selected_option>=firstQuestionIndex && selected_option < winningScreen){
+                        selected_choise++;
+                    }
                 }
                 break;
             case 3: //left
@@ -596,7 +626,13 @@ public class Juego extends JFrame{
             case 4: //enter
                 //Select answer
                 if(selected_option>=firstQuestionIndex && selected_option < winningScreen){
-                    if(isAnswerCorrect(questionIndex)){
+                    boolean isCorrect;
+                    if(firstQuestionIndex==0){
+                        isCorrect = isAnswerCorrect(questionIndex,5);
+                    }else{
+                        isCorrect = isAnswerCorrect(questionIndex,4);
+                    }
+                    if(isCorrect){
                         gatheredMedals[selected_option-firstQuestionIndex] = true;
                     }
                     selected_choise = 1;
@@ -636,6 +672,18 @@ public class Juego extends JFrame{
                                     }
                                 }
                                 actualizarDatos();
+                            }else if(winningScreen == 5){ //If the progress is saved at level 3
+                                if(correctCounter > player.getPuntajes().get(2)){
+                                    String correctas = correctCounter+".0";
+                                    player.getPuntajes().set(2, Float.parseFloat(correctas));
+                                    if(correctCounter>2){
+                                        selected_menu = 1;
+                                        selected_option = 0;
+                                        correctCounter = 0;
+                                        gatheredMedals = new boolean[5];
+                                    }
+                                }
+                                actualizarDatos();
                             }
                             break;
                         case 5: //Retry
@@ -645,8 +693,11 @@ public class Juego extends JFrame{
                                 player.getIntentos().set(0, player.getIntentos().get(0)+1);
                             }else if(winningScreen==17){
                                 player.getIntentos().set(1, player.getIntentos().get(1)+1);
+                            }else if(winningScreen==5){
+                                player.getIntentos().set(2, player.getIntentos().get(2)+1);
                             }
                             correctCounter = 0;
+                            questionWasAlreadyShown = new boolean[30];
                             gatheredMedals = new boolean[5];
                             break;
                         case 6: //Return to level menu
@@ -758,6 +809,7 @@ public class Juego extends JFrame{
                                     }else if (movement == KeyEvent.VK_ENTER){
                                         if(player.getPuntajes().get(1) > 2){
                                             startLevel(3);
+                                            player.getIntentos().set(2, player.getIntentos().get(2)+1);
                                         }
                                     }
                                     break;
@@ -874,6 +926,21 @@ public class Juego extends JFrame{
                         }
                         break;
                     case 5:
+                        try{
+                            if(movement==KeyEvent.VK_UP){
+                                moveThroughLevelOptions(0, 5, 0, 3);
+                            }else if(movement==KeyEvent.VK_RIGHT){
+                                moveThroughLevelOptions(0, 5, 1, 3);
+                            }else if(movement==KeyEvent.VK_DOWN){
+                                moveThroughLevelOptions(0, 5, 2, 3);
+                            }else if(movement==KeyEvent.VK_LEFT){
+                                moveThroughLevelOptions(0, 5, 3, 3);
+                            }else if(movement==KeyEvent.VK_ENTER){
+                                moveThroughLevelOptions(0, 5, 4, 3);
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
                         break;
                }
                
