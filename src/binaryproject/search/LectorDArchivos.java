@@ -28,6 +28,10 @@ public class LectorDArchivos {
         this.lineaActual = null;
     }
     
+    public void nextLogLine() throws IOException{
+        this.lineaActual = this.lector.readLine();
+    }
+    
     public String[] leerLinea() throws IOException{
         this.lineaActual = this.lector.readLine();
         if(lineaActual != null){

@@ -22,29 +22,16 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import org.apache.poi.hssf.model.InternalSheet;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 /**
  *
  * @author steven
@@ -66,8 +53,9 @@ public class Juego extends JFrame{
     private Colores paleta;
     //Niveles
     private ArrayList<String[]> preguntas;
+    private ArrayList<String[]> playerLogs;
     private boolean[] questionWasAlreadyShown;
-    private boolean[] gatheredMedals;
+    private boolean[][] gatheredMedals;
     private int correctCounter;
     private int questionIndex;
     //Jugadores
@@ -75,16 +63,17 @@ public class Juego extends JFrame{
     private Jugador player;
     //Cuenta
     private String Name;
+    private String Code;
     private String Password;
-    private String rutaP;
-    private String rutaLogs;
+    private String rutaArchivos;
     private boolean created;
     private boolean taken;
     //Constantes
     private final int choiseX;
     private final int choiseY;
+    private long timeEntrada;
     
-    public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> bancoP, ArrayList<String[]> players, String logs){
+    public Juego(ArrayList<ArrayList<ImageIcon>> IRes, String BDJugadores, ArrayList<String[]> rutaBancoP, ArrayList<String[]> players, String rutaArchivos, ArrayList<String[]> sesiones){
         //Frame
         this.ancho_mapa = 1280;
         this.alto_mapa = getAncho_mapa() / 16*9;
@@ -98,14 +87,14 @@ public class Juego extends JFrame{
             I = new Imagenes(IRes.get(i));
             graphicRes.add(I);
         }
-        preguntas = bancoP;
+        preguntas = rutaBancoP;
         paleta = new Colores();
-        gatheredMedals = new boolean[5];
+        gatheredMedals = new boolean[3][5];
         //Cuentas
         Name = "";
+        Code = "";
         Password = "";
-        this.rutaP = BDJugadores;
-        this.rutaLogs = logs;
+        this.rutaArchivos = rutaArchivos;
         this.questionWasAlreadyShown = new boolean[30];
         created = false;
         taken = false;
@@ -114,6 +103,7 @@ public class Juego extends JFrame{
         selected_menu = 0;
         selected_choise = 4;
         jugadores = players;
+        playerLogs = sesiones;
         controls();
         crearBotones();
         instanciarHiloPrincipal();
@@ -178,18 +168,27 @@ public class Juego extends JFrame{
     }
     
     public void drawLevelStatistics(){
+        int tiempo;
         if(player!=null){
+            tiempo = 0;
+            tiempo = (int) Math.floor(player.getTiempos().get(0)[2]);
+            tiempo = tiempo / 1000;
             drawText("Score: " + player.getPuntajes().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 530);
-            drawText("Time: " + player.getTiempos().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 550);
+            drawText("Time: " + tiempo +" seg", paleta.getColores().get(paleta.BLUE), 20, 240, 550);
             drawText("Attempts: " + player.getIntentos().get(0), paleta.getColores().get(paleta.BLUE), 20, 240, 570);
             if(player.getIntentos().get(1) != 0){
+                tiempo = 0;
+                tiempo = (int) Math.floor(player.getTiempos().get(1)[2]);
+                tiempo = tiempo / 1000;
                 drawText("Score: " + player.getPuntajes().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 530);
-                drawText("Time: " + player.getTiempos().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 550);
+                drawText("Time: " + tiempo +" segs", paleta.getColores().get(paleta.BLUE), 20, 590, 550);
                 drawText("Attempts: " + player.getIntentos().get(1), paleta.getColores().get(paleta.BLUE), 20, 590, 570);
             }
             if(player.getIntentos().get(2) != 0){
+                tiempo = (int) Math.floor(player.getTiempos().get(2)[2]);
+                tiempo = tiempo / 1000;
                 drawText("Score: " + player.getPuntajes().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 530);
-                drawText("Time: " + player.getTiempos().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 550);
+                drawText("Time: " + tiempo + " segs", paleta.getColores().get(paleta.BLUE), 20, 940, 550);
                 drawText("Attempts: " + player.getIntentos().get(2), paleta.getColores().get(paleta.BLUE), 20, 940, 570);
             }
         }else{
@@ -236,8 +235,12 @@ public class Juego extends JFrame{
                         drawText("Logged in", paleta.getColores().get(paleta.getGREEN()), 25, 860, 280);
                     }
                 }else if(selected_option >= 2){
-                    if(selected_option < 4){
+                    if(selected_option < 5){
                         drawText("Registration", paleta.getColores().get(paleta.getBLACK()), 50, 500, 100);
+                        drawText("Codigo", paleta.getColores().get(paleta.getBLACK()), 30, 400, 400);
+                        drawText(Code+"", paleta.getColores().get(paleta.RED), 20, 410, 420);
+                        drawText("Password", paleta.getColores().get(paleta.getBLACK()), 30, 400, 520);
+                        drawText(censor, paleta.getColores().get(paleta.RED), 20, 410, 540);
                         if(created){
                             drawText("New player registered!", paleta.getColores().get(paleta.getGREEN()), 25, 0, 20);
                         }else if(taken){
@@ -245,11 +248,11 @@ public class Juego extends JFrame{
                         }
                     }else if(selected_option >= 4){
                         drawText("Login", paleta.getColores().get(paleta.getBLACK()), 50, 500, 100);
+                        drawText("Password", paleta.getColores().get(paleta.getBLACK()), 30, 400, 400);
+                        drawText(censor, paleta.getColores().get(paleta.RED), 20, 410, 420);
                     }
                     drawText("Username", paleta.getColores().get(paleta.getBLACK()), 30, 400, 280);
-                    drawText(Name, paleta.getColores().get(paleta.RED), 20, 410, 300);
-                    drawText("Password", paleta.getColores().get(paleta.getBLACK()), 30, 400, 400);
-                    drawText(censor, paleta.getColores().get(paleta.RED), 20, 410, 420);
+                    drawText(Name, paleta.getColores().get(paleta.RED), 20, 410, 300);   
                 }
                 break;
             case 3:
@@ -259,7 +262,7 @@ public class Juego extends JFrame{
                 }else{
                     quiz(1);
                 }
-                break;
+                break;//////////////////////////////
             case 4:
                 //Nivel 2
                 if(selected_option<12){
@@ -315,7 +318,6 @@ public class Juego extends JFrame{
         if(selected_option>=firstQuestionPage && selected_option<winningPage){
             int questionNumb = selected_option-firstQuestionPage;
             String question = preguntas.get(questionIndex)[0];
-            System.out.println(question);
             if(question.length()>180){
                 drawText((questionNumb+1)+"): "+question.split(":")[0], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX-10, choiseY-100);
                 drawText(question.split(":")[1], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX+20, choiseY+(fontSize+5)-100);
@@ -332,11 +334,30 @@ public class Juego extends JFrame{
             if(firstQuestionPage==0){
                 drawText("d): "+preguntas.get(questionIndex)[4], paleta.getColores().get(paleta.getBLACK()), fontSize, choiseX, choiseY+150);
             }
-            drawMedals(questionNumb);
-            drawInfo();
+            switch(winningPage){
+                case 39:
+                    drawMedals(questionNumb,0);
+                    break;
+                case 17:
+                    drawMedals(questionNumb,1);
+                    break;
+                case 5:
+                    drawMedals(questionNumb,2);
+                    break;
+            }
             drawSelectedChoise();
         }else if(selected_option==winningPage){
-            drawWinningMenu();
+            switch(winningPage){
+                case 39:
+                    drawWinningMenu(0);
+                    break;
+                case 17:
+                    drawWinningMenu(1);
+                    break;
+                case 5:
+                    drawWinningMenu(2);
+                    break;
+            }   
         }
     }
     
@@ -358,14 +379,14 @@ public class Juego extends JFrame{
         graficos.drawImage(graphicRes.get(0).obtenerImagen(3).getImage(), choiseX-4, (choiseY-18)+((selected_choise-1)*50),22,22,null);
     }
     
-    public void drawMedals(int questionNumber){
+    public void drawMedals(int questionNumber, int level){
         int X;
         int Y = 50;
         int ancho = 100;
         int alto = 80;
         for (int i = 0; i < 5; i++) {
             X = 200+2*i*ancho;
-            if(!gatheredMedals[i]){
+            if(!gatheredMedals[level][i]){
                 graficos.drawImage(graphicRes.get(0).obtenerImagen(1).getImage(), X, Y, ancho,alto,null);
             }else{
                 graficos.drawImage(graphicRes.get(0).obtenerImagen(2).getImage(), X, Y, ancho,alto,null);
@@ -373,30 +394,24 @@ public class Juego extends JFrame{
         }
     }
     
-    public void drawInfo(){
-    
-    }
-    
     public void explicaciones(int nivel){
         if(nivel==1){
             graficos.drawImage(graphicRes.get(1).obtenerImagen(selected_option).getImage(), 0, 0, ancho_mapa-10, alto_mapa-10, null);
+            if(player.getIntentos().get(0)>1 || selected_option > 24){
+                drawText("Press 'S' to skip explanation", paleta.getColores().get(paleta.getBLUE()), 20, 0, 20);
+            }
         }else if(nivel==2){
             graficos.drawImage(graphicRes.get(1).obtenerImagen(selected_option+35).getImage(), 0, 0, ancho_mapa-10, alto_mapa-10, null);
+            if(player.getIntentos().get(1)>1){
+                drawText("Press 'S' to skip explanation", paleta.getColores().get(paleta.getBLUE()), 20, 0, 20);
+            }
         }
     }
     
     public void crearNuevoJugador() throws IOException{
-        /*
-        (ID) (Nombre),(Contraseña(tiempoNivel1),(tiempoNivel2),(tiempoNivel3),
-          0, Astrobix, awaker2130,      0,             0,             0,
-        (PuntajeN1),(PuntajeN2),(PuntajeN3),(IntentoN1),(IntentoN2),(IntentoN3)
-            0,           0,          0,          0,          0,          0,
-        (Score)
-           0
-        */
-        int ID = existePlayer();
+        int ID = existePlayer(Name);
         if(ID == jugadores.size()){
-            String newPlayer = ID+","+Name+","+Password+",0,0,0,0,0,0,0,0,0,0";
+            String newPlayer = Code+","+Name+",0,"+Password+",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0";
             jugadores.add(newPlayer.split(","));
             created = true;
             taken = false;
@@ -406,28 +421,45 @@ public class Juego extends JFrame{
     }
     
     public Jugador toPlayerData(String[] playerInformation){
-        int ID = Integer.parseInt(playerInformation[0]);
-        ArrayList<Long> tiempos = new ArrayList<Long>();
+        ArrayList<Long[]> tiempos = new ArrayList<Long[]>();
         ArrayList<Float> puntos = new ArrayList<Float>();
         ArrayList<Integer> intentos = new ArrayList<Integer>();
-        tiempos.add(Long.parseLong(playerInformation[3]));
-        tiempos.add(Long.parseLong(playerInformation[4]));
-        tiempos.add(Long.parseLong(playerInformation[5]));
-        puntos.add(Float.parseFloat(playerInformation[6]));
-        puntos.add(Float.parseFloat(playerInformation[7]));
-        puntos.add(Float.parseFloat(playerInformation[8]));
-        intentos.add(Integer.parseInt(playerInformation[9]));
-        intentos.add(Integer.parseInt(playerInformation[10]));
-        intentos.add(Integer.parseInt(playerInformation[11]));
-        return new Jugador(ID,playerInformation[1], playerInformation[2], tiempos, puntos, intentos, Float.parseFloat(playerInformation[12]));        
+        Long[] time = new Long[3];
+        time[0] = Long.parseLong(playerInformation[4]);
+        time[1] = Long.parseLong(playerInformation[5]);
+        time[2] = Long.parseLong(playerInformation[6]);
+        tiempos.add(time);
+        time = new Long[3];
+        time[0] = Long.parseLong(playerInformation[7]);
+        time[1] = Long.parseLong(playerInformation[8]);
+        time[2] = Long.parseLong(playerInformation[9]);
+        tiempos.add(time);
+        time = new Long[3];
+        time[0] = Long.parseLong(playerInformation[10]);
+        time[1] = Long.parseLong(playerInformation[11]);
+        time[2] = Long.parseLong(playerInformation[12]);
+        tiempos.add(time);
+        puntos.add(Float.parseFloat(playerInformation[13]));
+        puntos.add(Float.parseFloat(playerInformation[14]));
+        puntos.add(Float.parseFloat(playerInformation[15]));
+        intentos.add(Integer.parseInt(playerInformation[16]));
+        intentos.add(Integer.parseInt(playerInformation[17]));
+        intentos.add(Integer.parseInt(playerInformation[18]));
+        boolean[] writenInf = new boolean[3];
+        for (int i = 0; i < 3; i++) {
+            if(playerInformation[20+i].equals(1)){
+                writenInf[i] = true;
+            }else{
+                writenInf[i] = false;
+            }
+        }
+        return new Jugador(Integer.parseInt(playerInformation[0]), playerInformation[1], Long.parseLong(playerInformation[2]), playerInformation[3], tiempos, puntos, intentos, Float.parseFloat(playerInformation[19]), writenInf);        
     }
     
-    public void actualizarDatos() throws IOException{
-        player.actualizarPuntaje();
-        jugadores.set(player.getID(), player.playerInfoAsArray());
-        EscritorDArchivos writer = new EscritorDArchivos(rutaP,false); //Esto es para que el archivo se vuelva a crear
+    public void actualizarAchivoJugadoreS() throws IOException{
+        EscritorDArchivos writer = new EscritorDArchivos(rutaArchivos+"jugadores.txt",false); //Esto es para que el archivo se vuelva a crear
         writer.cerrar(); 
-        writer = new EscritorDArchivos(rutaP, true); //ahora si se escribe en el
+        writer = new EscritorDArchivos(rutaArchivos+"jugadores.txt", true); //ahora si se escribe en el
         for (int i = 0; i < jugadores.size(); i++) {
             Jugador Temp = toPlayerData(jugadores.get(i));
             writer.escribir(Temp.toString());
@@ -435,13 +467,21 @@ public class Juego extends JFrame{
         writer.cerrar();
     }
     
+    public void actualizarDatos() throws IOException{
+        player.actualizarPuntaje();
+        int playerID = existePlayer(player.getNombre());
+        jugadores.set(playerID, player.playerInfoAsArray()); //correjir esto
+       actualizarAchivoJugadoreS();
+    }
+    
     public void cargarDatos(){
-        int ID = existePlayer();
+        int ID = existePlayer(Name);
         if(ID == jugadores.size()){
             drawText("Player doesn't exist", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
         }else{
-            if(jugadores.get(ID)[2].equals(Password)){
+            if(jugadores.get(ID)[3].equals(Password)){
                 player = toPlayerData(jugadores.get(ID));
+                player.setLastTimeLogin(System.currentTimeMillis());
                 Name = "";
                 Password = "";
                 selected_option = 0;
@@ -451,11 +491,11 @@ public class Juego extends JFrame{
         }
     }
     
-    public int existePlayer(){
+    public int existePlayer(String playerName){
         boolean found = false;
         int index = 0;
         while(index < jugadores.size() && !found){
-            if(jugadores.get(index)[1].equals(Name)){
+            if(jugadores.get(index)[1].equals(playerName)){
                 return index;
             }else{
                 index++;
@@ -490,19 +530,18 @@ public class Juego extends JFrame{
             drawText("You've scored: "+correctCounter+".0 since you answered "+correctCounter+" questions correctly", paleta.getColores().get(paleta.getBLACK()), 25, X-180, Y+50+alto+50);
             drawText("Take it easy, rome wasn't built in a day.", paleta.getColores().get(paleta.getRED()), 30, X-120, Y+50+alto+150);
         }
-    
     }
     /***
      * Dibuja la informacion del ultimo menu (Si gano el jugador o no)
      */
-    public void drawWinningMenu(){
+    public void drawWinningMenu(int level){
         int X = 350;
         int Y = 150;
         int ancho = 100;
         int alto = 80;
         correctCounter = 0;
         for (int i = 0; i < 5; i++) {
-            if(gatheredMedals[i]){
+            if(gatheredMedals[level][i]){
                 correctCounter++;
             }
         }
@@ -633,7 +672,7 @@ public class Juego extends JFrame{
                         isCorrect = isAnswerCorrect(questionIndex,4);
                     }
                     if(isCorrect){
-                        gatheredMedals[selected_option-firstQuestionIndex] = true;
+                        gatheredMedals[level-1][selected_option-firstQuestionIndex] = true;
                     }
                     selected_choise = 1;
                     selected_option++;
@@ -656,7 +695,8 @@ public class Juego extends JFrame{
                                         selected_menu = 1;
                                         selected_option = 0;
                                         correctCounter = 0;
-                                        gatheredMedals = new boolean[5];
+                                        player.getTiempos().get(0)[1] = System.currentTimeMillis();
+                                        player.getTiempos().get(0)[2] = player.getTiempos().get(0)[1] - player.getTiempos().get(0)[0];
                                     }
                                 }
                                 actualizarDatos();
@@ -668,7 +708,8 @@ public class Juego extends JFrame{
                                         selected_menu = 1;
                                         selected_option = 0;
                                         correctCounter = 0;
-                                        gatheredMedals = new boolean[5];
+                                        player.getTiempos().get(1)[1] = System.currentTimeMillis();
+                                        player.getTiempos().get(1)[2] = player.getTiempos().get(1)[1] - player.getTiempos().get(1)[0];
                                     }
                                 }
                                 actualizarDatos();
@@ -680,7 +721,8 @@ public class Juego extends JFrame{
                                         selected_menu = 1;
                                         selected_option = 0;
                                         correctCounter = 0;
-                                        gatheredMedals = new boolean[5];
+                                        player.getTiempos().get(2)[1] = System.currentTimeMillis();
+                                        player.getTiempos().get(2)[2] = player.getTiempos().get(2)[1] - player.getTiempos().get(2)[0];
                                     }
                                 }
                                 actualizarDatos();
@@ -691,21 +733,33 @@ public class Juego extends JFrame{
                             selected_choise = 1;
                             if(winningScreen==39){
                                 player.getIntentos().set(0, player.getIntentos().get(0)+1);
+                                gatheredMedals[0] = new boolean[5];
                             }else if(winningScreen==17){
                                 player.getIntentos().set(1, player.getIntentos().get(1)+1);
+                                gatheredMedals[1] = new boolean[5];
                             }else if(winningScreen==5){
                                 player.getIntentos().set(2, player.getIntentos().get(2)+1);
+                                gatheredMedals[2] = new boolean[5];
                             }
                             correctCounter = 0;
                             questionWasAlreadyShown = new boolean[30];
-                            gatheredMedals = new boolean[5];
                             break;
                         case 6: //Return to level menu
+                            if(selected_option==39){
+                                player.getTiempos().get(0)[1] = System.currentTimeMillis();
+                                player.getTiempos().get(0)[2] = player.getTiempos().get(0)[1] - player.getTiempos().get(0)[0];
+                            }else if(selected_option==17){
+                                player.getTiempos().get(1)[1] = System.currentTimeMillis();
+                                player.getTiempos().get(1)[2] = player.getTiempos().get(1)[1] - player.getTiempos().get(1)[0];
+                            }else if(selected_option==5){
+                                player.getTiempos().get(2)[1] = System.currentTimeMillis();
+                                player.getTiempos().get(2)[2] = player.getTiempos().get(2)[1] - player.getTiempos().get(2)[0];
+                            }
                             selected_menu = 1;
                             selected_option = 0;
                             selected_choise = 1;
                             correctCounter = 0;
-                            gatheredMedals = new boolean[5];
+                            actualizarDatos();
                             break;
                     }
                 }      
@@ -768,6 +822,11 @@ public class Juego extends JFrame{
                                 }else if(movement == KeyEvent.VK_LEFT){
                                     selected_option--;
                                 }else if(movement == KeyEvent.VK_ENTER){
+                                    try {
+                                        escribirExcel();
+                                    } catch (Exception ex) {
+                                        ex.printStackTrace();
+                                    }
                                     System.exit(0);
                                 };
                                 break;
@@ -785,8 +844,15 @@ public class Juego extends JFrame{
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option = 2;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        startLevel(1);
-                                        player.getIntentos().set(0, player.getIntentos().get(0)+1);
+                                        if(player.getPuntajes().get(0)<3){
+                                            gatheredMedals[0] = new boolean[5];
+                                            startLevel(1);
+                                            player.getTiempos().get(0)[0] = System.currentTimeMillis();
+                                            player.getIntentos().set(0, player.getIntentos().get(0)+1);
+                                        }else{
+                                            drawText("You have passed this level already", paleta.getColores().get(paleta.getRED()), 20, 0, 20);
+                                            lienzo.getBufferStrategy().show();
+                                        }
                                     }
                                     break;
                                 case 1:
@@ -795,9 +861,14 @@ public class Juego extends JFrame{
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option--;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        if(player.getPuntajes().get(0)>2){
+                                        if(player.getPuntajes().get(0)>2 && player.getPuntajes().get(1)<3){
+                                            gatheredMedals[1] = new boolean[5];
                                             startLevel(2);
+                                            player.getTiempos().get(1)[0] = System.currentTimeMillis();
                                             player.getIntentos().set(1, player.getIntentos().get(1)+1);
+                                        }else{
+                                            drawText("You have passed this level already", paleta.getColores().get(paleta.getRED()), 20, 0, 20);
+                                            lienzo.getBufferStrategy().show();
                                         }
                                     }
                                     break;
@@ -807,9 +878,14 @@ public class Juego extends JFrame{
                                     }else if(movement == KeyEvent.VK_LEFT){
                                         selected_option--;
                                     }else if (movement == KeyEvent.VK_ENTER){
-                                        if(player.getPuntajes().get(1) > 2){
+                                        if(player.getPuntajes().get(1) > 2 && player.getPuntajes().get(2) < 3){
+                                            gatheredMedals[2] = new boolean[5];
                                             startLevel(3);
+                                            player.getTiempos().get(2)[0] = System.currentTimeMillis();
                                             player.getIntentos().set(2, player.getIntentos().get(2)+1);
+                                        }else{
+                                            drawText("You have passed this level already", paleta.getColores().get(paleta.getRED()), 20, 0, 20);
+                                            lienzo.getBufferStrategy().show();
                                         }
                                     }
                                     break;
@@ -825,7 +901,7 @@ public class Juego extends JFrame{
                                         selected_option = 2;
                                 }else{
                                     if(player==null){
-                                        selected_option = 4;
+                                        selected_option = 5;
                                     }
                                 }
                             }else if(movement == KeyEvent.VK_ESCAPE){
@@ -837,32 +913,48 @@ public class Juego extends JFrame{
                             if(movement == KeyEvent.VK_ESCAPE){
                                 selected_option = 0;
                                 Name = "";
+                                Code = "";
                                 Password = "";
                                 created = false;
                             }
                             
-                            if(movement == KeyEvent.VK_RIGHT || movement == KeyEvent.VK_LEFT){
+                            if(movement == KeyEvent.VK_RIGHT){
                                 if(selected_option < 4){
-                                    selected_option = (selected_option == 2)? 3:2;
-                                }else{
-                                    selected_option = (selected_option == 4)? 5:4;
-                                }   
+                                    selected_option++;
+                                }else if(selected_option >= 5 && selected_option < 6){
+                                    selected_option++;
+                                }
                             }
                             
-                            else if(movement >= KeyEvent.VK_A && movement <= KeyEvent.VK_Z){
-                                if(selected_option == 2 || selected_option == 4){
+                            if(movement == KeyEvent.VK_LEFT){
+                                if(selected_option > 2 && selected_option <= 4){
+                                    selected_option--; 
+                                }else if(selected_option > 5 && selected_option <= 6){
+                                    selected_option--;
+                                }
+                            }
+                            
+                            else if(movement >= KeyEvent.VK_A && movement <= KeyEvent.VK_Z || movement>=KeyEvent.VK_0 && movement <= KeyEvent.VK_9){
+                                if((selected_option == 2 || selected_option == 5) && Name.length()<30){
                                     Name+=tecla.getKeyChar();
-                                }else if (selected_option == 3 || selected_option == 5){
+                                }else if(selected_option == 3 && movement>=KeyEvent.VK_0 && movement <= KeyEvent.VK_9 && Code.length()<10){
+                                    Code+=tecla.getKeyChar();
+                                }else if (selected_option == 4 || selected_option == 6){
                                     Password+=tecla.getKeyChar();
                                 }
                             }
                             
                             else if(movement == KeyEvent.VK_BACK_SPACE){
-                                if(selected_option == 2 || selected_option == 4){
+                                if(selected_option == 2 || selected_option == 5){
                                     if(Name.length()!=0){
                                         Name = Name.substring(0, Name.length()-1);
                                     }
-                                }else if (selected_option == 3 || selected_option == 5){
+                                }else if(selected_option==3){
+                                    if(Code.length()!=0){
+                                        Code = Code.substring(0, Code.length()-1);
+                                    }
+                                }
+                                else if (selected_option == 4 || selected_option == 6){
                                     if(Password.length()!=0){
                                         Password = Password.substring(0, Password.length()-1);
                                     }
@@ -870,17 +962,24 @@ public class Juego extends JFrame{
                             }
                             
                             else if(movement == KeyEvent.VK_ENTER){
-                                if(Name.length() == 0 || Password.length() == 0){
-                                    drawText("Fill both spaces", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
+                                if(Name.length() == 0 || Password.length() == 0 || (Code.length() < 10 && selected_option < 5)){
+                                    if(Code.length()<10){
+                                        if((Name.length() != 0 || Password.length() != 0)){
+                                            drawText("Fill your 10 digit code", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
+                                        }else{
+                                            drawText("Fill all fields", paleta.getColores().get(paleta.getRED()), 25, 0, 20);
+                                        }
+                                    }
                                 }else{
-                                    if(selected_option == 2 || selected_option == 3){
+                                    if(selected_option == 2 || selected_option == 3 || selected_option == 4){
                                         try {
                                             crearNuevoJugador();
                                         } catch (IOException ex) {
                                             ex.printStackTrace();
                                         }
-                                    }else if((selected_option == 4 || selected_option == 5) && player==null){
+                                    }else if((selected_option == 5 || selected_option == 6) && player==null){
                                         cargarDatos();
+                                        timeEntrada = System.currentTimeMillis();
                                     }
                                 }
                                 lienzo.getBufferStrategy().show();
@@ -901,6 +1000,8 @@ public class Juego extends JFrame{
                                 moveThroughLevelOptions(34, 39, 3, 1);
                             }else if(movement==KeyEvent.VK_ENTER){
                                 moveThroughLevelOptions(34, 39, 4, 1);
+                            }else if(movement==KeyEvent.VK_S && ((selected_option==0 && player.getIntentos().get(0)>1)||(selected_option>24 && selected_option < 34))){
+                                selected_option = 34;
                             }
                         }catch(Exception e){
                             e.printStackTrace();
@@ -920,6 +1021,8 @@ public class Juego extends JFrame{
                                 moveThroughLevelOptions(12, 17, 3, 2);
                             }else if(movement==KeyEvent.VK_ENTER){
                                 moveThroughLevelOptions(12, 17, 4, 2);
+                            }else if(movement==KeyEvent.VK_S && ((selected_option > 0 && selected_option < 16) && player.getIntentos().get(0)>1)){
+                                selected_option = 34;
                             }
                         }catch(Exception e){
                             e.printStackTrace();
@@ -982,7 +1085,11 @@ public class Juego extends JFrame{
             
             @Override
             public void windowClosing(WindowEvent e) {
-                ////Guardar el log en el archivo excel
+                try {
+                    escribirExcel();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
                 
             }
         }
@@ -990,11 +1097,221 @@ public class Juego extends JFrame{
         
    }
     
+    public boolean hasPlayerPastLogs(String player){
+        int logIndex = 0;
+        while(logIndex < playerLogs.size()){
+            if(playerLogs.get(logIndex)[1].equals(player)){
+                return true;
+            }
+            logIndex++;
+        }
+        return false;
+    }
+     
+    public ArrayList<Integer> getPlayerSesionDataIndexes(String player){
+        ArrayList<Integer> playerHistory = new ArrayList<Integer>();
+        for (int i = 0; i < playerLogs.size(); i++) {
+            if(playerLogs.get(i)[1].equals(player)){
+                playerHistory.add(i);
+            }
+        }
+        return playerHistory;
+    }
+    
+    public void updateLogs(){
+        
+    }
+    
+    public int getAmmountOfCorrectQuestions(int level){
+        int ammount = 0;
+        for (int i = 0; i < 5; i++) {
+            if(gatheredMedals[level-1][i]){
+                ammount++;
+            }
+        }
+        return ammount;
+    }
+    
+    public String getCorrectQuestionsIndividually(int level){
+        String correctAnswers = "";
+        for (int i = 0; i < 5; i++) {
+            if(gatheredMedals[level-1][i]){
+                correctAnswers+="1;";
+            }else{
+                correctAnswers+="0;";
+            }
+        }
+        return correctAnswers;
+    }
+    
+    public void escribirExcel() throws FileNotFoundException, IOException, InvalidFormatException{
+        long exitTime = System.currentTimeMillis();
+        if(player!=null){
+            // Actualiza el archivo de jugadores con la informacion que habia antes de cerrarse
+            actualizarAchivoJugadoreS(); 
+            // Actualiza el archivo del registro de sesiones
+            EscritorDArchivos writer = new EscritorDArchivos(rutaArchivos+"logs.txt", true);
+            String justAnotherLogForAnExistingPlayer = "";
+            if(hasPlayerPastLogs(player.getNombre())){
+                ArrayList<Integer> logHistoryIndex = getPlayerSesionDataIndexes(player.getNombre());
+                boolean[] loggedQuestions = new boolean[3];
+                int i = 0;
+                while(!loggedQuestions[0] && i < logHistoryIndex.size()){
+                    int puntaje = Integer.parseInt(playerLogs.get(logHistoryIndex.get(i))[11]);
+                    if(puntaje > 3){
+                        loggedQuestions[0] = true;
+                    }
+                    i++;
+                }
+                i = 0;
+                while(!loggedQuestions[1] && i < logHistoryIndex.size()){
+                    int puntaje = Integer.parseInt(playerLogs.get(logHistoryIndex.get(i))[21]);
+                    if(puntaje > 3){
+                        loggedQuestions[1] = true;
+                    }
+                    i++;
+                }
+                i = 0;
+                while(!loggedQuestions[2] && i < logHistoryIndex.size()){
+                    int puntaje = Integer.parseInt(playerLogs.get(logHistoryIndex.get(i))[31]);
+                    if(puntaje > 3){
+                        loggedQuestions[2] = true;
+                    }
+                    i++;
+                }
+                justAnotherLogForAnExistingPlayer
+                        +=player.getID()+";"+
+                        player.getNombre()+";"+
+                        (playerLogs.size()+1)+";"+
+                        player.getLastTimeLogin()+";"+
+                        exitTime+";"+
+                        (exitTime-player.getLastTimeLogin())+";";
+                if(!loggedQuestions[0]){
+                    justAnotherLogForAnExistingPlayer+=getCorrectQuestionsIndividually(1);
+                    justAnotherLogForAnExistingPlayer+=getAmmountOfCorrectQuestions(1)+";";
+                    justAnotherLogForAnExistingPlayer+=player.getTiempos().get(0)[0]+";"+player.getTiempos().get(0)[1]+";"+player.getTiempos().get(0)[2]+";";
+                }else{
+                    justAnotherLogForAnExistingPlayer+="0;0;0;0;0;0;";
+                    justAnotherLogForAnExistingPlayer+="0;0;0;";
+                }
+                //Agregar STN1
+                long STN = 0;
+                if(logHistoryIndex.size()!=0 && !loggedQuestions[0]){
+                    for (int j = 0; j < logHistoryIndex.size(); j++) {
+                        STN += Long.parseLong(playerLogs.get(logHistoryIndex.get(j))[14]);
+                    }
+                    STN+=player.getTiempos().get(0)[2];
+                    if(STN!=0){
+                        player.changeWritenState(0, true);
+                    }
+                }
+                justAnotherLogForAnExistingPlayer+=STN+";";
+                if(!loggedQuestions[1]){
+                    justAnotherLogForAnExistingPlayer+=getCorrectQuestionsIndividually(2);
+                    justAnotherLogForAnExistingPlayer+=getAmmountOfCorrectQuestions(2)+";";
+                    justAnotherLogForAnExistingPlayer+=player.getTiempos().get(1)[0]+";"+player.getTiempos().get(1)[1]+";"+player.getTiempos().get(1)[2]+";";
+                }else{
+                    justAnotherLogForAnExistingPlayer+="0;0;0;0;0;0;";
+                }
+                //Agregar SNT2
+                STN = 0;
+                if(logHistoryIndex.size()!=0 && !loggedQuestions[1]){
+                    for (int j = 0; j < logHistoryIndex.size(); j++) {
+                        STN += Long.parseLong(playerLogs.get(logHistoryIndex.get(j))[24]);
+                    }
+                    STN+=player.getTiempos().get(1)[2];
+                    if(STN!=0){
+                        player.changeWritenState(1, true);
+                    }
+                }
+                justAnotherLogForAnExistingPlayer+=STN+";";
+                if(!loggedQuestions[2]){
+                    justAnotherLogForAnExistingPlayer+=getCorrectQuestionsIndividually(3);
+                    justAnotherLogForAnExistingPlayer+=getAmmountOfCorrectQuestions(3)+";";
+                    justAnotherLogForAnExistingPlayer+=player.getTiempos().get(2)[0]+";"+player.getTiempos().get(2)[1]+";"+player.getTiempos().get(2)[2]+";";
+                }else{
+                    justAnotherLogForAnExistingPlayer+="0;0;0;0;0;0;";
+                }
+                //Agregar SNT3
+                STN = 0;
+                if(logHistoryIndex.size()!=0 && !loggedQuestions[2]){
+                    for (int j = 0; j < logHistoryIndex.size(); j++) {
+                        STN += Long.parseLong(playerLogs.get(logHistoryIndex.get(j))[34]);
+                    }
+                    STN+=player.getTiempos().get(2)[2];
+                    if(STN!=0){
+                        player.changeWritenState(2, true);
+                    }
+                }
+                justAnotherLogForAnExistingPlayer+=STN+";";
+                //Cargar el CT Total
+                justAnotherLogForAnExistingPlayer+=player.getScore()+";";
+                long spentTime = 0;
+                for (int j = 0; j < logHistoryIndex.size(); j++) {
+                        spentTime += Long.parseLong(playerLogs.get(logHistoryIndex.get(j))[5]);
+                }
+                justAnotherLogForAnExistingPlayer+=(spentTime+(exitTime-player.getLastTimeLogin()));
+            }else{
+                justAnotherLogForAnExistingPlayer
+                        +=player.getID()+";"+
+                        player.getNombre()+";"+
+                        (playerLogs.size()+1)+";"+
+                        player.getLastTimeLogin()+";"+
+                        exitTime+";"+
+                        (exitTime-player.getLastTimeLogin())+";";
+                //Terminar de rellenar con el resto de informacion de toda la sesion
+                justAnotherLogForAnExistingPlayer+=getCorrectQuestionsIndividually(1);
+                justAnotherLogForAnExistingPlayer+=getAmmountOfCorrectQuestions(1)+";";
+                justAnotherLogForAnExistingPlayer+=player.getTiempos().get(0)[0]+";"+player.getTiempos().get(0)[1]+";"+player.getTiempos().get(0)[2]+";";
+                justAnotherLogForAnExistingPlayer+=player.getTiempos().get(0)[2]+";"; //STN1
+                justAnotherLogForAnExistingPlayer+=getCorrectQuestionsIndividually(2);
+                justAnotherLogForAnExistingPlayer+=getAmmountOfCorrectQuestions(2)+";";
+                justAnotherLogForAnExistingPlayer+=player.getTiempos().get(1)[0]+";"+player.getTiempos().get(1)[1]+";"+player.getTiempos().get(1)[2]+";";
+                justAnotherLogForAnExistingPlayer+=player.getTiempos().get(1)[2]+";"; //STN2
+                justAnotherLogForAnExistingPlayer+=getCorrectQuestionsIndividually(3);
+                justAnotherLogForAnExistingPlayer+=getAmmountOfCorrectQuestions(3)+";";
+                justAnotherLogForAnExistingPlayer+=player.getTiempos().get(2)[0]+";"+player.getTiempos().get(2)[1]+";"+player.getTiempos().get(2)[2]+";";
+                justAnotherLogForAnExistingPlayer+=player.getTiempos().get(2)[2]+";"; //STN3
+                justAnotherLogForAnExistingPlayer+=player.getScore()+";";
+                justAnotherLogForAnExistingPlayer+=exitTime-player.getLastTimeLogin();
+            }
+            writer.escribir(justAnotherLogForAnExistingPlayer);
+            writer.cerrar();
+            ////////////////////////////////////////////////////////////////////
+            ///////////Pasar la infrmacion a archivo excel//////////////////////
+            ////////////////////////////////////////////////////////////////////
+            LectorDArchivos reader = new LectorDArchivos(rutaArchivos+"logs.txt");
+            XSSFWorkbook libro = new XSSFWorkbook();
+            XSSFSheet hoja = libro.createSheet("Test");
+            XSSFRow row;
+            String[] informacion;
+            String cellValue;
+            int rowNumber = 0;
+            reader.leerLinea();
+            while(reader.getLineaActual()!=null){
+                informacion = reader.getLineaActual().split(";");
+                row = hoja.createRow(rowNumber);
+                for (int i = 0; i < informacion.length; i++) {
+                    cellValue = informacion[i];
+                    row.createCell(i).setCellValue(cellValue);  
+                }
+                reader.leerLinea();
+                rowNumber++;
+            }
+            new File(rutaArchivos+"estadisticas.xls").delete();
+            FileOutputStream archivoFinal = new FileOutputStream(new File(rutaArchivos+"estadisticas.xls"));
+            libro.write(archivoFinal);
+            archivoFinal.close();
+        }
+    }
+    
+    
     ////////////////////////////////////////////////////////////////////////////
     //////////////////////////Getter and Setter/////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
     public Graphics getGraficos() {
         return graficos;
+        //No hay repeticion de niveles
     }
 
     public Thread getRefresh() {

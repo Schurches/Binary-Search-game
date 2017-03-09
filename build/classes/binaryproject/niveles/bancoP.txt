@@ -4,7 +4,7 @@ If we analize the array [4|2|6|8|9] looking for the value "5":How many iteration
 The algorithm can't be applied in one of the following arrays, [30],[15|75|120|300|400|850|1000|2000],[2|8],1
 If we analize the array [2|7|10|15|20] looking for the value "13":How many iterations would it take to conclude that is not on it?,5,3,2,3
 Given the array [20|30|40|50|60]. After calculating the "Guess position" for:the first time looking for the value "50" the upper and lower bounds will be,3 and 4,0 and 5,4 and 3,3
-Given the array [20|30|40|50|60]. By calculating the "Guess position" for:the first time looking for the value "10" the lower and upper bounds will be,0 and 1,0 and 5,0 and 2,2
+Given the array [20|30|40|50|60]. By calculating the "Guess position" for:the first time looking for the value "10" the lower and upper bounds will be,0 and 1,0 and 4,0 and 2,2
 Can you apply the algorithm on the following array? [0|1],Yes,no,I don't know,1
 Which of the following statements is true if the algorithm is looking for:the value "8" in the first iteration given the array [2|4|8|16|32|64] ?,The algorithm sets the positions 0 and 1 as new lower and upper bounds,The algorithm finds the value 8 in the first iteration,The algorithm doesn't work because the array is huge,2
 How many "Guess position" will the algorithm calculate if it looks for: the value "108" in the array [100|101|102|103|104|105|106|107|108] ?,4,5,6,1

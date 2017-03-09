@@ -24,9 +24,10 @@ public class BinaryProject {
     private ArrayList<ArrayList<ImageIcon>> recurGraf;
     private ArrayList<ImageIcon> recurMusic;
     private ArrayList<String[]> jugadores;
-    private ArrayList<Object> preguntas;
+    private ArrayList<String[]> logs;
     private ArrayList<String[]> listaPreg;
     String jugadoresRuta;
+    String rutaPlayers;
     String rutaLogs;
     
     public BinaryProject(){
@@ -34,6 +35,7 @@ public class BinaryProject {
         recurMusic = new ArrayList<ImageIcon>();
         jugadores = new ArrayList<String[]>();
         listaPreg = new ArrayList<String[]>();
+        logs = new ArrayList<String[]>();
     }
     /**
      * @param args the command line arguments
@@ -52,12 +54,13 @@ public class BinaryProject {
         lol[9] = 24;
         lol[10] = 25;
         binarySearch asd = new binarySearch(lol);
-        asd.search(11);*/ 
+        asd.search(11);*/
         BinaryProject BP = new BinaryProject();
         BP.cargarImagenes();
         BP.cargarJugadores();
         BP.cargarBancoDePreguntas();
-        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta, BP.listaPreg, BP.jugadores, BP.rutaLogs);
+        BP.cargarSesiones();
+        Juego V = new Juego(BP.getRecurGraf(), BP.jugadoresRuta, BP.listaPreg, BP.jugadores, BP.rutaPlayers, BP.logs);
         V.setVisible(true);
         V.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         V.getRefresh().start();
@@ -74,9 +77,25 @@ public class BinaryProject {
         reader.cerrarArchivo();
     }
     
+    public void cargarSesiones() throws IOException{
+        rutaLogs = getClass().getResource("niveles/logs.txt").getPath();
+        File logsFile = new File(rutaLogs);
+        if(!logsFile.exists()){
+            logsFile.createNewFile();
+        }
+        LectorDArchivos lector = new LectorDArchivos(rutaLogs);
+        lector.nextLogLine();
+        lector.nextLogLine();
+        lector.nextLogLine();
+        while(lector.getLineaActual() != null){
+           logs.add(lector.getLineaActual().split(";"));
+           lector.nextLogLine();
+        }
+    }
+    
     public void cargarJugadores() throws FileNotFoundException, IOException{
-        rutaLogs = getClass().getResource("niveles/").getPath();
-        File playerFile = new File(rutaLogs+"jugadores.txt");
+        rutaPlayers = getClass().getResource("niveles/").getPath();
+        File playerFile = new File(rutaPlayers+"jugadores.txt");
         if(!playerFile.exists()){
             playerFile.createNewFile();
         }
