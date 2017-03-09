@@ -28,8 +28,26 @@ import java.io.IOException;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+<<<<<<< HEAD
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.xssf.usermodel.XSSFRow;
+=======
+import org.apache.poi.hssf.model.InternalSheet;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellRangeUtil;
+import org.apache.poi.ss.util.CellUtil;
+>>>>>>> origin/master
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /**
@@ -1096,6 +1114,7 @@ public class Juego extends JFrame{
         );
         
    }
+<<<<<<< HEAD
     
     public boolean hasPlayerPastLogs(String player){
         int logIndex = 0;
@@ -1306,6 +1325,45 @@ public class Juego extends JFrame{
     }
     
     
+=======
+    public void escribirExcel() throws FileNotFoundException, IOException{
+        HSSFWorkbook libro=new HSSFWorkbook();// crea el libro de excel
+        HSSFSheet hoja=libro.createSheet();// crea una hoja de excel
+        
+        String[] dificultad=new String[]{"PRINCIPIANTE","INTERMEDIO","EXPERTO"};
+        String[] encabezadosdetabla=new String[]{"Código","Nombre","S No."
+        ,"Te","Ts","Tt","P1","P2","P3","P4","P5","CT1","TeN1","TsN1","TtN1","STN1","P1",
+        "P2","P3","P4","P5","CT2","TeN2","TsN2","TtN2","STN2","P1","P2","P3","P4","P5","CT3"
+        ,"TeN3","TsN3","TtN3","STN3","CTJ","TTJ"};
+        
+        HSSFRow headerRow =hoja.createRow(0);//crea la fila de la dificultad
+        for (int i = 6; i < dificultad.length; i=i+10) {
+            String dificult = dificultad[i];            
+            HSSFCell celda= headerRow.createCell(i);
+            celda.setCellValue(dificult);           
+            CellUtil.setAlignment(celda, HorizontalAlignment.CENTER);
+        }
+        
+        HSSFRow encabezado=hoja.createRow(1);//crea la primera fila de la tabla
+        for (int i = 0; i < encabezadosdetabla.length; i++) {
+            String encabez=encabezadosdetabla[i];
+            HSSFCell celda=encabezado.createCell(i);
+            celda.setCellValue(encabez);
+        }
+        
+        for (int i = 0; i < jugadores.size(); i++) {
+            for (int j = 0; j < 10; j++) {
+                
+            }
+        }
+        
+        
+        FileOutputStream file=new FileOutputStream(rutaLogs+"estadisticas.xls", false);
+        libro.write(file);
+        file.close();
+        
+    }
+>>>>>>> origin/master
     ////////////////////////////////////////////////////////////////////////////
     //////////////////////////Getter and Setter/////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
