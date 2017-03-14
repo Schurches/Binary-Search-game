@@ -41,20 +41,6 @@ public class BinaryProject {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        /*int[] lol = new int[11];
-        lol[0] = 11;
-        lol[1] = 12;
-        lol[2] = 13;
-        lol[3] = 14;
-        lol[4] = 15;
-        lol[5] = 20;
-        lol[6] = 21;
-        lol[7] = 22;
-        lol[8] = 23;
-        lol[9] = 24;
-        lol[10] = 25;
-        binarySearch asd = new binarySearch(lol);
-        asd.search(11);*/
         BinaryProject BP = new BinaryProject();
         BP.cargarImagenes();
         BP.cargarJugadores();
@@ -65,6 +51,7 @@ public class BinaryProject {
         V.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         V.getRefresh().start();
         V.setResizable(false);
+        System.out.println("hola");
     }
     
     public void cargarBancoDePreguntas() throws FileNotFoundException, IOException{
